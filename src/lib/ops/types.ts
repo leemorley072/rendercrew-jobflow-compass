@@ -68,6 +68,28 @@ export interface Job {
   menNeeded?: number;
   /** Access, parking, key safe, hazards — shown to the team on the site card. */
   accessNotes?: string;
+  /** Site pin for check-in location checks. */
+  geo?: { lat: number; lng: number };
+  /** Date (YYYY-MM-DD) the job was wrapped up for the day — unlocks team check-out. */
+  closedOutOn?: string;
+}
+
+export interface TimeEntry {
+  id: string;
+  workerId: string;
+  jobId: string;
+  date: string;
+  clockIn: string;
+  clockOut?: string;
+  dayRate: number;
+  inGps?: { lat: number; lng: number; acc?: number };
+  outGps?: { lat: number; lng: number; acc?: number };
+  inMetres?: number;
+  outMetres?: number;
+  inOffSite?: boolean;
+  outOffSite?: boolean;
+  /** Added or fixed by the office (flat battery etc.). */
+  manual?: boolean;
 }
 
 export interface VariationItem {
@@ -171,6 +193,7 @@ export interface TenantData {
   materialOverrides?: MaterialOverrides;
   workers?: Worker[];
   reminderLog?: ReminderLog[];
+  timeEntries?: TimeEntry[];
 }
 
 export interface MaterialItem {

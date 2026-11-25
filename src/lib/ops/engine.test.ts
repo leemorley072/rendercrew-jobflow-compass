@@ -150,3 +150,40 @@ describe("worker access & reminders", () => {
     expect(STAGES.plaster.map((s) => s.name)).toEqual(["Before Photos", "Prep Work Done", "Plastering Finished"]);
   });
 });
+
+import { clockIn, clockOut, labourFromEntries, monthlyAudit } from "./time";
+import type { TimeEntry, Worker } from "./types";
+
+describe("check-in / check-out", () => {
+  const w = { id: "wA", name: "Amy", dayRate: 190 } as Worker;
+  const j = (over: Partial<Job> = {}) => job({ id: "jA", ...over });
+  it("only lets a worker join the job they're booked on today", () => {
+    expect(() => clockIn([], w, j(), "other", "2026-11-25T07:30:00Z")).toThrow();
+    const es: TimeEntry[] = [];
+    clockIn(es, w, j(), "jA", "2026-11-25T07:30:00Z");
+    expect(es).toHaveLength(1);
+    expect(() => clockIn(es, w, j(), "jA", "2026-11-25T07:40:00Z")).toThrow();
+  });
+  it("blocks check-out until the job is wrapped up for the day", () => {
+    const es: TimeEntry[] = [];
+    clockIn(es, w, j(), "jA", "2026-11-25T07:30:00Z");
+    expect(() => clockOut(es, "wA", j(), "2026-11-25T16:00:00Z")).toThrow();
+    clockOut(es, "wA", j({ closedOutOn: "2026-11-25" }), "2026-11-25T16:00:00Z");
+    expect(es[0]!.clockOut).toBe("2026-11-25T16:00:00Z");
+  });
+  it("charges each worker's own day rate to the job", () => {
+    const es = [{ jobId: "jA", dayRate: 190 }, { jobId: "jA", dayRate: 220 }, { jobId: "jB", dayRate: 999 }] as TimeEntry[];
+    expect(labourFromEntries(es, "jA")).toEqual({ cost: 410, shifts: 2 });
+  });
+  it("flags off-site check-ins when the phone is far from the site pin", () => {
+    const es: TimeEntry[] = [];
+    clockIn(es, w, j({ geo: { lat: 53.99, lng: -1.54 } }), "jA", "2026-11-25T07:30:00Z", { lat: 53.80, lng: -1.55 });
+    expect(es[0]!.inOffSite).toBe(true);
+  });
+  it("counts lost hours against an 8-hour day", () => {
+    const es = [{ workerId: "wA", jobId: "jA", date: "2026-11-02", dayRate: 160, clockIn: "2026-11-02T08:00:00Z", clockOut: "2026-11-02T14:00:00Z" }] as TimeEntry[];
+    const [a] = monthlyAudit(es, [{ ...w, dayRate: 160 }], "2026-11", "2026-11-25");
+    expect(a!.lostHours).toBe(2);
+    expect(a!.lostValue).toBe(40);
+  });
+});

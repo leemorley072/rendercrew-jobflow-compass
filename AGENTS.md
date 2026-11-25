@@ -37,3 +37,5 @@ use the editor.
 - Workers live in `TenantData.workers`; a team (`Crew`) with `memberIds` gets men/day rate/skills from its workers via `syncCrew`, so costing and dispatch keep reading crew fields unchanged.
 - Team re-routing and worker access are pure functions (`team.ts` planPivot, engine `todaysJobFor`/`middayReminders`); the site view and job card gate on `todaysJobFor` for the Site Lead role.
 - Stage photos unlock the next stage only on office approval (`approveStage`); rejection stores a note (`rejectStage`) shown on the team card — crews must not coat over unchecked work.
+- Labour cost comes from `TenantData.timeEntries` (each worker self-checks in/out, own day rate per shift) via `time.ts`; legacy `manDays` is frozen once a job uses check-ins, and check-out requires the job wrapped up for the day (`Job.closedOutOn`) — so cost is per real person on site and never double-counted.
+- Check-in GPS distance/off-site flags are stored on entries but rendered only in Contractor Mode (`/timesheets`); Team Mode never shows prices, runway or location data.

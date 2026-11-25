@@ -107,6 +107,7 @@ const TABS = [
   { to: "/", label: "Sites" },
   { to: "/dispatch", label: "Dispatch" },
   { to: "/team", label: "Team" },
+  { to: "/timesheets", label: "Timesheets" },
   { to: "/ghl", label: "Renderfuel Sales" },
   { to: "/site", label: "Site View" },
 ] as const;

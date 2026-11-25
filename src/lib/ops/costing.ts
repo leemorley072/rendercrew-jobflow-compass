@@ -1,3 +1,4 @@
+import { labourFromEntries } from "./time";
 import type { Worker, Crew, Job, MaterialItem, MaterialOverrides, Tenant, TenantData, Variation } from "./types";
 
 /** Agency benchmark price book every new contractor account inherits. */
@@ -58,8 +59,10 @@ export function manDaysLogged(job: Job, crewMen = 1) {
 }
 
 /** Closing a shift: one site day, men-on-site man-days, scaffold day only if there is scaffold. */
-export function closeOutShift(job: Job, crewMen: number) {
-  job.manDays = manDaysLogged(job, crewMen) + job.menOnSite;
+export function closeOutShift(job: Job, crewMen: number, opts: { date?: string; timed?: boolean } = {}) {
+  // With check-ins, labour comes from each worker's own shift, so the legacy man-day log is frozen.
+  job.manDays = manDaysLogged(job, crewMen) + (opts.timed ? 0 : job.menOnSite);
+  if (opts.date) job.closedOutOn = opts.date;
   job.daysWorked += 1;
   if (scaffoldNeeded(job)) job.scaffold.daysUsed += 1;
 }
@@ -74,7 +77,7 @@ export function labourRunway(
   variations: Variation[],
   gpFloor: number,
   dayRate: number,
-  opts: { men?: number; spend?: number } = {},
+  opts: { men?: number; spend?: number; timed?: { cost: number; shifts: number } } = {},
 ) {
   const men = Math.max(1, opts.men ?? 1);
   const perMan = dayRate / men;
@@ -85,8 +88,9 @@ export function labourRunway(
   const scaffold = scaffoldNeeded(job) ? job.scaffoldCost : 0;
   const direct = material + scaffold;
   const floor = revenue * gpFloor;
-  const manDays = manDaysLogged(job, men);
-  const labourSpent = manDays * perMan;
+  const legacy = manDaysLogged(job, men);
+  const manDays = legacy + (opts.timed?.shifts ?? 0);
+  const labourSpent = legacy * perMan + (opts.timed?.cost ?? 0);
   const affordable = dayRate > 0 ? (revenue - direct - floor) / dayRate : 0;
   const used = dayRate > 0 ? labourSpent / dayRate : 0;
   const remaining = affordable - used;
@@ -102,6 +106,7 @@ export function runwayFor(job: Job, d: TenantData, tenant: Tenant, catalog: Mate
   return labourRunway(job, d.variations, tenant.gpFloor, crew?.dayRate ?? tenant.defaultDayRate, {
     men: crew?.men ?? 3,
     spend: materialSpend(job, catalog),
+    timed: labourFromEntries(d.timeEntries ?? [], job.id),
   });
 }
 

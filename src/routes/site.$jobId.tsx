@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { AlertTriangle, Camera, Check, Clock, Hand, Lock, Minus, Plus, FileCheck2 } from "lucide-react";
+import { AlertTriangle, Camera, Check, Clock, Hand, Lock, Minus, Plus, FileCheck2, LogIn, LogOut, Users } from "lucide-react";
 import { toast } from "sonner";
 import { MobileFrame, MobileHeader, MobileTabs, type MobileTab } from "@/components/ops/chrome";
 import { RunwayGauge } from "@/components/ops/RunwayGauge";
@@ -9,6 +9,16 @@ import { todaysJobFor, coatingSafe, gbp, scaffoldLeft, TODAY, weatherFor } from 
 import { bagsUsed, closeOutShift, itemsForJob, runwayFor, scaffoldNeeded } from "@/lib/ops/costing";
 import { currentStage, elevationDone, stageDef, verifyStage } from "@/lib/ops/stages";
 import { cn } from "@/lib/utils";
+import { clockIn, clockOut, dayKey, entriesOn, openEntry } from "@/lib/ops/time";
+
+/** Best-effort location; never blocks the team if the phone says no. */
+function getGps(): Promise<{ lat: number; lng: number; acc: number } | undefined> {
+  return new Promise((res) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return res(undefined);
+    navigator.geolocation.getCurrentPosition((p) => res({ lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy) }), () => res(undefined), { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
+  });
+}
+
 
 const TABS: MobileTab[] = ["job", "photos", "crew", "stock"];
 
@@ -60,6 +70,53 @@ function JobCard() {
   const stock = itemsForJob(catalog, job);
   const bags = job.usage ? bagsUsed(job, catalog) : job.bags;
   const wet = !coatingSafe(weatherFor(data, job.region, TODAY));
+  const team = state.role === "lead";
+  const me = (data.workers ?? []).find((w) => w.id === state.activeWorkerId);
+  const entries = data.timeEntries ?? [];
+  const today = dayKey(new Date().toISOString());
+  const onToday = entriesOn(entries, job.id, today);
+  const mine = me ? onToday.find((e) => e.workerId === me.id) : undefined;
+  const checkedIn = !!mine && !mine.clockOut;
+  const wrapped = job.closedOutOn === today;
+  const gated = team && !mine;
+  const name = (id: string) => (data.workers ?? []).find((w) => w.id === id)?.name ?? "Team member";
+  const hhmm = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+  const checkIn = async () => {
+    if (!me) return;
+    setBusy(true);
+    const gps = await getGps();
+    try {
+      mutateData((d) => {
+        d.timeEntries ??= [];
+        const j = d.jobs.find((x) => x.id === job.id);
+        clockIn(d.timeEntries, me, j, todaysJobFor(d, me.id)?.id, new Date().toISOString(), gps);
+      });
+      toast.success(`Morning ${me.name.split(" ")[0]} — you're on today's shift. Good to have you.`);
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Couldn't join the shift."); }
+    finally { setBusy(false); }
+  };
+
+  const checkOut = async () => {
+    if (!me) return;
+    if (!wrapped) { toast.error("Wrap up today's job first — then everyone checks out."); return; }
+    setBusy(true);
+    const gps = await getGps();
+    try {
+      mutateData((d) => { const j = d.jobs.find((x) => x.id === job.id)!; clockOut(d.timeEntries ?? [], me.id, j, new Date().toISOString(), gps); });
+      toast.success("Checked out — today's shift is in for pay. Cheers for today.");
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Couldn't check out."); }
+    finally { setBusy(false); }
+  };
+
+  const wrapUp = () => {
+    if (team && !checkedIn) { toast.error("Join today's shift first."); return; }
+    const timed = onToday.length > 0;
+    const men = timed ? onToday.length : job.menOnSite;
+    if (men < 1) { toast.error("Set how many were on site today first."); return; }
+    update((j) => { if (timed) j.menOnSite = men; closeOutShift(j, crew?.men ?? 3, { date: today, timed }); });
+    toast.success(team ? "Job wrapped up for today — everyone can now check out." : `Shift logged — ${men} on site today.`);
+  };
 
   const pick = (code: string) => {
     if (code.startsWith("S5") && job.batches.length === 0) {
@@ -100,7 +157,26 @@ function JobCard() {
       <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={onFile} />
       <MobileHeader title={job.address} region={job.region} />
       <div className="px-4 pb-48 space-y-4">
-        {tab === "job" && (
+        {gated && (
+          <>
+            <section className="bg-white border border-line rounded-[18px] p-5 hard">
+              <p className="text-[13px] font-extrabold uppercase tracking-widest">Good morning{me ? `, ${me.name.split(" ")[0]}` : ""}</p>
+              <h2 className="mt-1 font-display text-[22px] leading-7">Join today's shift to open the job</h2>
+              <p className="mt-2 text-[14px] font-semibold text-ink/75">Your check-in and check-out make up your shift sign-off for weekly pay — no check-in, no shift on the pay run.</p>
+              <button onClick={checkIn} disabled={busy || !me} className="mt-4 w-full h-16 rounded-full bg-safety border border-line text-[17px] font-extrabold flex items-center justify-center gap-2 hard">
+                <LogIn className="w-5 h-5" strokeWidth={2.5} /> {busy ? "Joining…" : "Join Today's Shift"}
+              </button>
+              {!me && <p className="mt-2 text-[13px] font-bold text-ink/70">Pick who you are on My Sites first.</p>}
+            </section>
+            {job.accessNotes?.trim() && (
+              <section className="bg-ink text-white border border-line rounded-[18px] p-4 hard">
+                <p className="text-[12px] font-extrabold uppercase tracking-widest text-safety flex items-center gap-2"><AlertTriangle className="w-4 h-4" strokeWidth={2.5} /> Site access & hazards</p>
+                <p className="mt-2 text-[15px] font-semibold whitespace-pre-line leading-6">{job.accessNotes}</p>
+              </section>
+            )}
+          </>
+        )}
+        {!gated && tab === "job" && (
           <>
             {job.accessNotes?.trim() && (
               <section className="bg-ink text-white border border-line rounded-[18px] p-4 hard">
@@ -117,7 +193,7 @@ function JobCard() {
                 <div className={cn("h-full", left <= 0 ? "bg-safety" : "bg-ink")} style={{ width: `${pct}%` }} />
               </div>
               <p className={cn("mt-2 text-[15px] font-semibold", left <= 0 && "text-safety font-extrabold")}>
-                {left > 0 ? <>{left} days until <b className="font-extrabold">{gbp(job.scaffold.weeklyFee)}/wk</b> fee</> : <>Overrun · {gbp(job.scaffold.weeklyFee)}/wk now charging</>}
+                {team ? (left > 0 ? `${left} hire days left` : "Hire overrun — tell the office") : left > 0 ? <>{left} days until <b className="font-extrabold">{gbp(job.scaffold.weeklyFee)}/wk</b> fee</> : <>Overrun · {gbp(job.scaffold.weeklyFee)}/wk now charging</>}
               </p>
             </section>}
 
@@ -196,7 +272,7 @@ function JobCard() {
           </>
         )}
 
-        {tab === "photos" && (
+        {!gated && tab === "photos" && (
           <>
             {job.status === "complete" && (
               <Link to="/certificate/$jobId" params={{ jobId: job.id }} className="w-full h-16 rounded-full bg-go text-white border border-line text-[16px] font-extrabold flex items-center justify-center gap-2 hard">
@@ -219,50 +295,68 @@ function JobCard() {
           </>
         )}
 
-        {tab === "crew" && (
+        {!gated && tab === "crew" && (
           <>
             <section className="bg-white border border-line rounded-[18px] p-4 hard">
-              <p className="text-[13px] font-extrabold uppercase tracking-widest">Gang</p>
+              <p className="text-[13px] font-extrabold uppercase tracking-widest">Team</p>
               <h2 className="font-display text-[20px]">{crew?.name ?? "Not assigned"}</h2>
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-[15px] font-extrabold">Men on site</span>
-                <Stepper value={job.menOnSite} onChange={(v) => update((j) => { j.menOnSite = Math.max(0, v); })} />
-              </div>
+              <p className="mt-3 text-[13px] font-extrabold uppercase tracking-widest flex items-center gap-2"><Users className="w-4 h-4" /> On site today · {onToday.length}</p>
+              <ul className="mt-2 divide-y divide-line">
+                {onToday.length === 0 && <li className="py-3 text-[14px] font-bold text-ink/60">Nobody has joined today's shift yet.</li>}
+                {onToday.map((e) => (
+                  <li key={e.id} className="py-3 flex justify-between text-[15px] font-extrabold">
+                    <span>{name(e.workerId)}{me?.id === e.workerId ? " (you)" : ""}</span>
+                    <span className="text-ink/70">{hhmm(e.clockIn)}{e.clockOut ? ` – ${hhmm(e.clockOut)}` : " · on site"}</span>
+                  </li>
+                ))}
+              </ul>
+              {!team && onToday.length === 0 && (
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-[15px] font-extrabold">Men on site</span>
+                  <Stepper value={job.menOnSite} onChange={(v) => update((j) => { j.menOnSite = Math.max(0, v); })} />
+                </div>
+              )}
             </section>
-            <section className="bg-white border border-line rounded-[18px] p-4 hard">
-              <RunwayGauge r={runway} compact />
-            </section>
-            <button
-              onClick={() => {
-                if (job.menOnSite < 1) { toast.error("Set how many men were on site today first."); return; }
-                const men = job.menOnSite;
-                update((j) => closeOutShift(j, crew?.men ?? 3));
-                const cost = men * runway.perMan;
-                toast.success(`Shift logged — ${men} man-day${men > 1 ? "s" : ""} (${gbp(cost)}) · ${(runway.remaining - cost / (crew?.dayRate ?? tenant.defaultDayRate)).toFixed(1)} crew-days left`);
-              }}
-              className="w-full h-16 rounded-full bg-safety border border-line text-[17px] font-extrabold hard">
-              Close Out Today's Shift
-            </button>
-            <p className="text-[13px] font-bold text-ink/70 text-center">Logs {job.menOnSite} man-day{job.menOnSite === 1 ? "" : "s"} at {gbp(runway.perMan)} each{hasScaffold ? " and one scaffold day" : ""} for {job.address}.</p>
+            {!team && (
+              <section className="bg-white border border-line rounded-[18px] p-4 hard">
+                <RunwayGauge r={runway} compact />
+              </section>
+            )}
+            {wrapped ? (
+              <p className="text-center text-[15px] font-extrabold text-go">Job wrapped up for today ✓</p>
+            ) : (
+              <button onClick={wrapUp} className="w-full h-16 rounded-full bg-safety border border-line text-[17px] font-extrabold hard">
+                Wrap Up Today's Job
+              </button>
+            )}
+            {team && checkedIn && (
+              <button onClick={checkOut} disabled={busy} className={cn("w-full h-16 rounded-full border border-line text-[17px] font-extrabold flex items-center justify-center gap-2", wrapped ? "bg-ink text-white" : "bg-white text-ink/50")}>
+                <LogOut className="w-5 h-5" strokeWidth={2.5} /> {busy ? "Checking out…" : "Check Out of My Shift"}
+              </button>
+            )}
+            {team && mine?.clockOut && <p className="text-center text-[14px] font-extrabold">You checked out at {hhmm(mine.clockOut)} — shift sent for pay.</p>}
+            <p className="text-[13px] font-bold text-ink/70 text-center">
+              {team ? "Anyone on today's team can wrap up the job once the day's done. Then each of us checks out on our own phone — that's what puts the shift through for pay." : `Logs today's shift${hasScaffold ? " and one scaffold day" : ""} for ${job.address}.`}
+            </p>
           </>
         )}
 
-        {tab === "stock" && (
+        {!gated && tab === "stock" && (
           <>
             <section className="bg-white border border-line rounded-[18px] p-4 hard">
-              <div className="flex justify-between items-baseline">
+              {team ? <p className="text-[13px] font-extrabold uppercase tracking-widest">Materials used today</p> : <><div className="flex justify-between items-baseline">
                 <p className="text-[13px] font-extrabold uppercase tracking-widest">Materials used</p>
                 <span className={cn("font-display text-[20px]", runway.materialSpend > runway.materialAllowance && "text-safety")}>{gbp(runway.materialSpend)}</span>
               </div>
               <p className="text-[13px] font-bold text-ink/70">
                 {runway.materialSpend > runway.materialAllowance ? `${gbp(runway.materialSpend - runway.materialAllowance)} over the ${gbp(runway.materialAllowance)} allowance` : `${gbp(runway.materialAllowance - runway.materialSpend)} left of ${gbp(runway.materialAllowance)} allowance`}
-              </p>
+              </p></>}
               <ul className="mt-2 divide-y divide-line">
                 {stock.map((m) => {
                   const q = job.usage?.[m.id] ?? 0;
                   return (
                     <li key={m.id} className="py-3 flex items-center justify-between gap-2">
-                      <div className="min-w-0"><p className="text-[15px] font-extrabold leading-5">{m.name}</p><p className="text-[12px] font-bold text-ink/60">{gbp(m.price, 2)}/{m.unit} · {m.supplier}{q > 0 ? ` · ${gbp(q * m.price, 2)}` : ""}</p></div>
+                      <div className="min-w-0"><p className="text-[15px] font-extrabold leading-5">{m.name}</p><p className="text-[12px] font-bold text-ink/60">{team ? `per ${m.unit}` : `${gbp(m.price, 2)}/${m.unit} · ${m.supplier}${q > 0 ? ` · ${gbp(q * m.price, 2)}` : ""}`}</p></div>
                       <Stepper value={q} onChange={(v) => update((j) => { j.usage = { ...(j.usage ?? {}), [m.id]: Math.max(0, v) }; j.bags = bagsUsed(j, catalog); })} />
                     </li>
                   );
@@ -285,7 +379,7 @@ function JobCard() {
         )}
       </div>
 
-      {tab === "job" && (
+      {!gated && tab === "job" && (
         <div className="fixed bottom-[88px] inset-x-0 z-20 pointer-events-none">
           <div className="mx-auto max-w-[430px] px-4 pointer-events-auto">
             {cur ? (

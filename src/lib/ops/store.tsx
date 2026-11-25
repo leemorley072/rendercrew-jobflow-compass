@@ -33,6 +33,7 @@ export function OpsProvider({ children }: { children: ReactNode }) {
         for (const m of DEFAULT_MATERIALS) if (!s.agencyMaterials.some((x) => x.id === m.id)) s.agencyMaterials.push(structuredClone(m));
         const fresh = seedTenantData();
         for (const [id, d] of Object.entries(s.data)) {
+          d.timeEntries ??= id === "t1" ? (fresh.timeEntries ?? []) : [];
           if (d.workers) continue;
           if (id === "t1") {
             d.workers = fresh.workers ?? [];

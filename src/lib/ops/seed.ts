@@ -5,7 +5,7 @@ import brick1 from "@/assets/defect-brick-1.jpg";
 import brick2 from "@/assets/defect-brick-2.jpg";
 import { freshStages } from "./stages";
 import { DEFAULT_MATERIALS } from "./costing";
-import type { DayWeather, Job, OpsState, Region, SystemKind, TenantData, Worker } from "./types";
+import type { DayWeather, Job, OpsState, Region, SystemKind, TenantData, Worker, TimeEntry } from "./types";
 
 const dry = (temp = 14): DayWeather => ({ rain: 10, temp });
 
@@ -205,6 +205,7 @@ export function seedTenantData(): TenantData {
       { id: "g5", name: "Solo · Lewis", lead: "Lewis", men: 1, skills: ["plaster", "cork"], specialty: "Plastering & Cork", certs: "CorkSol Applicator", dayRate: 200, base: { x: 6, y: 20 }, phone: "", memberIds: ["w9"], driverId: "w9" },
     ],
     workers: SEED_WORKERS(),
+    timeEntries: SEED_TIME_ENTRIES(),
     bookings: [
       { id: "b1", crewId: "g1", start: 0, len: 3, kind: "work", label: "#1042 · Elm Grove Basecoat", jobId: "j1042", stageCode: "S3" },
       { id: "b2", crewId: "g1", start: 3, len: 1, kind: "hold", label: "Rain Hold" },
@@ -241,4 +242,30 @@ export function seedState(): OpsState {
     data: { t1: seedTenantData(), t2: emptyTenantData() },
     agencyMaterials: structuredClone(DEFAULT_MATERIALS),
   };
+}
+
+/** Earlier shifts this month (on the finished Wharfedale job) so the monthly audit has history. */
+export function SEED_TIME_ENTRIES(): TimeEntry[] {
+  const rates: Record<string, number> = { w1: 210, w2: 180, w3: 180, w4: 220, w5: 190, w6: 190, w7: 190, w8: 170, w9: 200 };
+  // [start, finish] habits per worker; "late" workers drift, w3 checks in from home, w8 forgets to check out.
+  const habit: Record<string, [string, string]> = { w1: ["07:28", "16:05"], w2: ["07:35", "15:55"], w3: ["08:40", "14:50"], w4: ["07:25", "16:10"], w5: ["07:40", "15:50"], w6: ["07:30", "16:00"], w7: ["07:30", "15:45"], w8: ["08:15", "14:30"], w9: ["07:45", "16:00"] };
+  const site = { lat: 53.9055, lng: -1.6912 };
+  const out: TimeEntry[] = [];
+  const days = [2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20];
+  for (const [wid, [a, b]] of Object.entries(habit)) {
+    days.forEach((d, i) => {
+      if (wid === "w5" && i % 7 === 3) return;
+      const date = `2026-11-${String(d).padStart(2, "0")}`;
+      const off = wid === "w3" && i % 3 === 0;
+      const forgot = wid === "w8" && i % 4 === 1;
+      const gps = off ? { lat: 53.83, lng: -1.58 } : site;
+      out.push({
+        id: `te-seed-${wid}-${d}`, workerId: wid, jobId: "j1035", date, dayRate: rates[wid]!,
+        clockIn: `${date}T${a}:00Z`, inGps: gps, inMetres: off ? 9100 : 35, inOffSite: off,
+        ...(forgot ? {} : { clockOut: `${date}T${b}:00Z`, outGps: site, outMetres: 40, outOffSite: false }),
+        ...(wid === "w2" && i === 6 ? { manual: true } : {}),
+      });
+    });
+  }
+  return out;
 }
