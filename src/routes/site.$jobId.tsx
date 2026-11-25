@@ -46,7 +46,6 @@ function JobCard() {
   const job = locked ? undefined : found;
   const [elName, setElName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [batch, setBatch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const target = useRef<{ el: string; code: string } | null>(null);
 
@@ -119,10 +118,6 @@ function JobCard() {
   };
 
   const pick = (code: string) => {
-    if (code.startsWith("S5") && job.batches.length === 0) {
-      toast.error("Log the topcoat batch number in Stock before photographing the topcoat.");
-      return;
-    }
     target.current = { el: el.name, code };
     fileRef.current?.click();
   };
@@ -361,18 +356,6 @@ function JobCard() {
                     </li>
                   );
                 })}
-              </ul>
-            </section>
-            <section className="bg-white border border-line rounded-[18px] p-4 hard">
-              <p className="text-[13px] font-extrabold uppercase tracking-widest">Topcoat batch log</p>
-              <p className="text-[13px] font-bold text-ink/70">One-run finish: log every batch so the colour can be matched later.</p>
-              <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); const b = batch.trim(); if (!b) return; update((j) => { j.batches.push(b); }); setBatch(""); toast.success(`Batch ${b} logged`); }}>
-                <input value={batch} onChange={(e) => setBatch(e.target.value)} placeholder="e.g. SIL-2291-C" className="flex-1 min-w-0 h-12 px-4 rounded-full border border-line font-semibold outline-none" />
-                <button className="h-12 px-5 rounded-full bg-safety border border-line font-extrabold">Log</button>
-              </form>
-              <ul className="mt-3 space-y-2">
-                {job.batches.length === 0 && <li className="text-[14px] font-bold text-ink/60">No batches logged yet.</li>}
-                {job.batches.map((b, i) => <li key={i} className="h-12 px-4 rounded-[10px] border border-line flex items-center font-extrabold">{b}</li>)}
               </ul>
             </section>
           </>

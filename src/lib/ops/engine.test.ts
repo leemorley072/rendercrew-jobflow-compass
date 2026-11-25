@@ -187,3 +187,23 @@ describe("check-in / check-out", () => {
     expect(a!.lostValue).toBe(40);
   });
 });
+
+import { collectEvents, defaultMilestones } from "./milestones";
+
+describe("stage payments", () => {
+  const base = (): import("./types").Job => structuredClone(seedTenantData().jobs.find((j) => j.system === "silicone")!);
+  it("default schedule is 20 / 40 / 40", () => {
+    expect(defaultMilestones("silicone").map((m) => m.pct)).toEqual([20, 40, 40]);
+  });
+  it("deposit invoice fires once for an active job, for 20% of contract", () => {
+    const j = base(); j.status = "active"; j.quoted = 10000; delete j.milestones; j.reviewRequested = true;
+    const ev = collectEvents(j, [], "2026-11-25T10:00:00Z");
+    expect(ev.find((e) => e.payload["milestone"] === "Deposit")?.payload["amount"]).toBe(2000);
+    expect(collectEvents(j, [], "2026-11-25T11:00:00Z").filter((e) => e.payload["milestone"] === "Deposit")).toHaveLength(0);
+  });
+  it("completion queues the review request once", () => {
+    const j = base(); j.status = "complete"; j.reviewRequested = false;
+    expect(collectEvents(j, [], "t").filter((e) => e.type === "job_completed")).toHaveLength(1);
+    expect(collectEvents(j, [], "t2").filter((e) => e.type === "job_completed")).toHaveLength(0);
+  });
+});

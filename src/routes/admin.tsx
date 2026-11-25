@@ -66,7 +66,7 @@ function Admin() {
   return (
     <div className="min-h-screen bg-stone">
       <DesktopHeader title="Renderfuel Agency Admin" subtitle={`${state.tenants.length} contractor accounts • Renderfuel Sales locations linked`} />
-      <main className="p-6 grid lg:grid-cols-[360px_1fr] gap-6 items-start">
+      <main className="p-3 sm:p-6 grid lg:grid-cols-[360px_1fr] gap-6 items-start [&>*]:min-w-0">
         <div className="space-y-4">
           <SectionTitle meta={state.tenants.length}>Contractor accounts</SectionTitle>
           {state.tenants.map((x) => {
@@ -105,10 +105,10 @@ function Admin() {
           </Card>
 
           <SectionTitle meta={`${d.crews.length} gangs`}>Crews &amp; rates</SectionTitle>
-          <Card className="overflow-hidden">
+          <Card className="overflow-x-auto">
             {d.crews.length === 0 && <p className="p-5 font-bold">No gangs yet — add the first one below so jobs can be scheduled.</p>}
             {d.crews.map((c) => (
-              <div key={c.id} className="grid grid-cols-[1fr_90px_130px_1fr_44px] gap-3 items-center px-4 py-3 border-b-2 border-line">
+              <div key={c.id} className="min-w-[760px] grid grid-cols-[1fr_90px_130px_1fr_44px] gap-3 items-center px-4 py-3 border-b-2 border-line">
                 <div><p className="font-display text-[15px]">{c.name}</p><p className="text-[12px] font-bold text-ink/60">{c.specialty}</p></div>
                 <label className="text-[11px] font-extrabold uppercase">Men<input className={fieldCls + " h-10"} inputMode="numeric" value={c.men} onChange={(e) => mutate((s) => { s.data[t.id]!.crews.find((x) => x.id === c.id)!.men = Number(e.target.value) || 1; })} /></label>
                 <label className="text-[11px] font-extrabold uppercase">Day rate £<input className={fieldCls + " h-10"} inputMode="numeric" value={c.dayRate} onChange={(e) => mutate((s) => { s.data[t.id]!.crews.find((x) => x.id === c.id)!.dayRate = Number(e.target.value) || 0; })} /></label>
@@ -116,7 +116,7 @@ function Admin() {
                 <button aria-label={`Remove ${c.name}`} onClick={() => mutate((s) => { const dd = s.data[t.id]!; dd.crews = dd.crews.filter((x) => x.id !== c.id); dd.bookings = dd.bookings.filter((b) => b.crewId !== c.id); })} className="w-10 h-10 rounded-full border border-line grid place-items-center"><Trash2 className="w-4 h-4" /></button>
               </div>
             ))}
-            <form onSubmit={addCrew} className="grid grid-cols-[1fr_80px_110px_1fr_1fr_auto] gap-3 items-end p-4 bg-stone/40">
+            <form onSubmit={addCrew} className="min-w-[760px] grid grid-cols-[1fr_80px_110px_1fr_1fr_auto] gap-3 items-end p-4 bg-stone/40">
               <label><span className={labelCls}>Gang lead</span><input className={fieldCls} value={cf.lead} onChange={(e) => setCf({ ...cf, lead: e.target.value })} /></label>
               <label><span className={labelCls}>Men</span><input className={fieldCls} value={cf.men} onChange={(e) => setCf({ ...cf, men: e.target.value })} /></label>
               <label><span className={labelCls}>Rate £</span><input className={fieldCls} value={cf.rate} onChange={(e) => setCf({ ...cf, rate: e.target.value })} /></label>
@@ -164,14 +164,14 @@ function PriceBook({ tenantId, tenantName }: { tenantId: string; tenantName: str
     <>
       <SectionTitle meta={`${state.agencyMaterials.length} items`}>Material price book</SectionTitle>
       <p className="text-[13px] font-bold text-ink/60 -mt-3">Agency prices are the benchmark every contractor starts with. Set {tenantName}'s own supplier and price to override.</p>
-      <Card className="overflow-hidden">
-        <div className="grid grid-cols-[1.6fr_70px_1fr_90px_1fr_90px_44px] gap-2 px-4 py-2 border-b-2 border-line text-[11px] font-extrabold uppercase tracking-widest text-ink/60">
+      <Card className="overflow-x-auto">
+        <div className="min-w-[760px] grid grid-cols-[1.6fr_70px_1fr_90px_1fr_90px_44px] gap-2 px-4 py-2 border-b-2 border-line text-[11px] font-extrabold uppercase tracking-widest text-ink/60">
           <span>Item</span><span>Unit</span><span>Agency supplier</span><span>Agency £</span><span>Their supplier</span><span>Their £</span><span />
         </div>
         {state.agencyMaterials.map((m) => {
           const o = overrides[m.id];
           return (
-            <div key={m.id} className="grid grid-cols-[1.6fr_70px_1fr_90px_1fr_90px_44px] gap-2 items-center px-4 py-2 border-b border-line">
+            <div key={m.id} className="min-w-[760px] grid grid-cols-[1.6fr_70px_1fr_90px_1fr_90px_44px] gap-2 items-center px-4 py-2 border-b border-line">
               <div><p className="text-[14px] font-extrabold leading-5">{m.name}</p><p className="text-[11px] font-bold text-ink/50 uppercase">{m.system === "all" ? "All systems" : SYSTEM_LABEL[m.system]}</p></div>
               <span className="text-[13px] font-bold">{m.unit}</span>
               <input aria-label={`Agency supplier for ${m.name}`} className={fieldCls + " h-10"} value={m.supplier} onChange={(e) => setAgency(m.id, (x) => { x.supplier = e.target.value; })} />
@@ -182,7 +182,7 @@ function PriceBook({ tenantId, tenantName }: { tenantId: string; tenantName: str
             </div>
           );
         })}
-        <form onSubmit={add} className="grid grid-cols-[1.6fr_80px_1fr_90px_130px_auto] gap-3 items-end p-4 bg-stone/40">
+        <form onSubmit={add} className="min-w-[760px] grid grid-cols-[1.6fr_80px_1fr_90px_130px_auto] gap-3 items-end p-4 bg-stone/40">
           <label><span className={labelCls}>New item</span><input className={fieldCls} value={nf.name} onChange={(e) => setNf({ ...nf, name: e.target.value })} placeholder="Primer 5L" /></label>
           <label><span className={labelCls}>Unit</span><input className={fieldCls} value={nf.unit} onChange={(e) => setNf({ ...nf, unit: e.target.value })} /></label>
           <label><span className={labelCls}>Supplier</span><input className={fieldCls} value={nf.supplier} onChange={(e) => setNf({ ...nf, supplier: e.target.value })} /></label>

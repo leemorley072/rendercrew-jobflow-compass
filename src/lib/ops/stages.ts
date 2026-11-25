@@ -14,7 +14,7 @@ export const STAGES: Record<SystemKind, StageDef[]> = {
     { code: "S2", name: "Beads & Opening Patches", short: "Beads", weatherSensitive: false, prep: true },
     { code: "S3", name: "Basecoat & 100% Mesh Embed (zero grin-through)", short: "Mesh Overlap", weatherSensitive: true, prep: false },
     { code: "S4", name: "Tinted Primer Coat (moisture check)", short: "Primer", weatherSensitive: true, prep: false },
-    { code: "S5", name: "Silicone Topcoat (one-run float, batch logging)", short: "Topcoat", weatherSensitive: true, prep: false },
+    { code: "S5", name: "Silicone Topcoat (one-run float)", short: "Topcoat", weatherSensitive: true, prep: false },
     { code: "S6", name: "Perimeter Seals & Clean Down", short: "Seals", weatherSensitive: false, prep: false },
   ],
   ewi: [
@@ -34,6 +34,24 @@ export const STAGES: Record<SystemKind, StageDef[]> = {
     { code: "P2", name: "Prep Work Done", short: "Prep", weatherSensitive: false, prep: true },
     { code: "P3", name: "Plastering Finished", short: "Finished", weatherSensitive: false, prep: false },
   ],
+  roof: [
+    { code: "R1", name: "Power Wash & Biocide", short: "Wash", weatherSensitive: false, prep: true },
+    { code: "R2", name: "Tile, Ridge & Valley Repairs", short: "Repairs", weatherSensitive: false, prep: true },
+    { code: "R3", name: "1st Roof Coating", short: "1st Coat", weatherSensitive: true, prep: false },
+    { code: "R4", name: "2nd Topcoat & Seal", short: "Topcoat", weatherSensitive: true, prep: false },
+  ],
+  floor: [
+    { code: "F1", name: "Diamond Grind / Shot Blast", short: "Grind", weatherSensitive: false, prep: true },
+    { code: "F2", name: "Epoxy Primer & Crack Fill", short: "Primer", weatherSensitive: false, prep: true },
+    { code: "F3", name: "Body Coat / Flake Broadcast", short: "Body Coat", weatherSensitive: false, prep: false },
+    { code: "F4", name: "Polyurethane Topcoat", short: "Topcoat", weatherSensitive: false, prep: false },
+  ],
+  wallcoat: [
+    { code: "W1", name: "Power Wash & Biocide", short: "Wash", weatherSensitive: false, prep: true },
+    { code: "W2", name: "Crack Repair & Masking", short: "Repairs", weatherSensitive: false, prep: true },
+    { code: "W3", name: "Stabilising Primer", short: "Primer", weatherSensitive: true, prep: false },
+    { code: "W4", name: "Textured / Elastomeric Wall Coating", short: "Coating", weatherSensitive: true, prep: false },
+  ],
 };
 
 export const SYSTEM_LABEL: Record<SystemKind, string> = {
@@ -42,6 +60,9 @@ export const SYSTEM_LABEL: Record<SystemKind, string> = {
   ewi: "External Wall Insulation",
   cork: "Sprayed Cork",
   plaster: "Internal Plastering",
+  roof: "Roof Coating",
+  floor: "Resin Floor Coating",
+  wallcoat: "Exterior Wall Coating",
 };
 export const SYSTEMS = Object.keys(SYSTEM_LABEL) as SystemKind[];
 export const DEFAULT_PRODUCT: Record<SystemKind, string> = {
@@ -50,11 +71,14 @@ export const DEFAULT_PRODUCT: Record<SystemKind, string> = {
   ewi: "Parex EWI",
   cork: "CorkSol",
   plaster: "Multi-Finish Skim",
+  roof: "Acrylic Roof Coating",
+  floor: "Epoxy Resin System",
+  wallcoat: "Textured Masonry Coating",
 };
 /** Indoor work a rained-off team can safely be sent to. */
-export const INDOOR: Record<SystemKind, boolean> = { silicone: false, monocouche: false, ewi: false, cork: false, plaster: true };
+export const INDOOR: Record<SystemKind, boolean> = { silicone: false, monocouche: false, ewi: false, cork: false, plaster: true, roof: false, floor: true, wallcoat: false };
 /** Typical headcount when the office doesn't set one. */
-export const DEFAULT_MEN: Record<SystemKind, number> = { silicone: 3, monocouche: 3, ewi: 3, cork: 2, plaster: 1 };
+export const DEFAULT_MEN: Record<SystemKind, number> = { silicone: 3, monocouche: 3, ewi: 3, cork: 2, plaster: 1, roof: 2, floor: 2, wallcoat: 2 };
 
 export function stageDef(code: string): StageDef {
   const all = Object.values(STAGES).flat();

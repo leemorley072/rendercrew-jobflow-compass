@@ -70,20 +70,20 @@ export function DesktopHeader({ title, subtitle }: { title: string; subtitle: st
   const { tenant, state } = useOps();
   const initials = tenant.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
   return (
-    <header className="h-16 px-6 flex items-center justify-between gap-6 bg-white border-b-2 border-line">
-      <div className="flex items-center gap-5 min-w-0">
+    <header className="min-h-16 px-3 sm:px-6 py-2 flex items-center justify-between gap-3 sm:gap-6 bg-white border-b-2 border-line">
+      <div className="flex items-center gap-3 sm:gap-5 min-w-0">
         <Link to="/" className="text-[16px] font-extrabold italic tracking-tight uppercase shrink-0">Render<span className="text-safety">Fuel</span></Link>
-        <span className="w-0.5 h-8 bg-ink shrink-0" />
+        <span className="hidden sm:block w-0.5 h-8 bg-ink shrink-0" />
         <div className="min-w-0">
-          <h1 className="font-display text-[22px] leading-6 truncate">{title}</h1>
-          <p className="text-[12px] font-bold text-ink/60 truncate">{subtitle}</p>
+          <h1 className="font-display text-[17px] sm:text-[22px] leading-6 truncate">{title}</h1>
+          <p className="hidden sm:block text-[12px] font-bold text-ink/60 truncate">{subtitle}</p>
         </div>
       </div>
-      <div className="flex items-center gap-3 shrink-0">
-        <WeatherPill region={tenant.homeRegion} />
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="hidden md:block"><WeatherPill region={tenant.homeRegion} /></div>
         {state.role !== "agency" && (
           <NewJobDialog>
-            <button className="h-11 px-4 rounded-full bg-safety border border-line text-[14px] font-extrabold hard">+ New Job</button>
+            <button className="h-11 px-4 rounded-full bg-safety border border-line text-[14px] font-extrabold hard whitespace-nowrap">+<span className="hidden sm:inline"> New Job</span></button>
           </NewJobDialog>
         )}
         <DropdownMenu>
@@ -116,13 +116,13 @@ export function DesktopTabs() {
   const { data } = useOps();
   const qa = data.jobs.reduce((n, j) => n + j.elevations.reduce((m, e) => m + e.stages.filter((s) => s.photo && s.review === "pending").length, 0), 0);
   return (
-    <nav className="h-14 px-6 flex items-center gap-2 bg-stone border-b-2 border-line">
+    <nav className="h-14 px-3 sm:px-6 flex items-center gap-2 bg-stone border-b-2 border-line overflow-x-auto [scrollbar-width:none]">
       {TABS.map((t) => (
         <Link
           key={t.to}
           to={t.to}
           activeOptions={{ exact: t.to === "/" }}
-          className="h-11 px-5 rounded-full flex items-center text-[14px] font-extrabold border border-transparent hover:border-line data-[status=active]:bg-ink data-[status=active]:text-white data-[status=active]:border-line"
+          className="h-11 px-4 sm:px-5 shrink-0 whitespace-nowrap rounded-full flex items-center text-[14px] font-extrabold border border-transparent hover:border-line data-[status=active]:bg-ink data-[status=active]:text-white data-[status=active]:border-line"
         >
           {t.label}
           {t.to === "/" && qa > 0 && <span aria-label={`${qa} photos to approve`} className="ml-2 min-w-6 h-6 px-1.5 rounded-full bg-safety text-ink border border-line text-[12px] font-extrabold grid place-items-center">{qa}</span>}
@@ -137,7 +137,7 @@ export function DesktopShell({ title, subtitle, children }: { title: string; sub
     <div className="min-h-screen bg-stone">
       <DesktopHeader title={title} subtitle={subtitle} />
       <DesktopTabs />
-      <main className="p-6">{children}</main>
+      <main className="p-3 sm:p-6 [&>*]:min-w-0">{children}</main>
     </div>
   );
 }
@@ -199,7 +199,7 @@ export function MobileTabs({ jobId, tab }: { jobId: string; tab: MobileTab }) {
 
 export function SectionTitle({ children, meta }: { children: ReactNode; meta?: ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between pt-2 mb-3">
+    <div className="flex flex-wrap gap-x-3 items-baseline justify-between pt-2 mb-3">
       <h3 className="text-[13px] font-extrabold uppercase tracking-widest">{children}</h3>
       {meta != null && <span className="text-[13px] font-extrabold text-ink/60">{meta}</span>}
     </div>

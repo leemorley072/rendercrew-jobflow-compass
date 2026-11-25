@@ -1,4 +1,4 @@
-export type SystemKind = "monocouche" | "silicone" | "ewi" | "cork" | "plaster";
+export type SystemKind = "monocouche" | "silicone" | "ewi" | "cork" | "plaster" | "roof" | "floor" | "wallcoat";
 export type Region = "Leeds" | "Harrogate" | "York";
 export type StageStatus = "verified" | "upload" | "locked";
 export type Review = "pending" | "approved" | "rejected";
@@ -72,6 +72,27 @@ export interface Job {
   geo?: { lat: number; lng: number };
   /** Date (YYYY-MM-DD) the job was wrapped up for the day — unlocks team check-out. */
   closedOutOn?: string;
+  /** Stage-payment schedule; hitting one queues an invoice event for Renderfuel Sales. */
+  milestones?: Milestone[];
+}
+
+export interface Milestone {
+  id: string;
+  name: string;
+  pct: number;
+  trigger: "booking" | "stage" | "complete";
+  stageCode?: string;
+  status: "waiting" | "ready" | "invoiced";
+  readyAt?: string;
+}
+
+export interface OutboundEvent {
+  id: string;
+  at: string;
+  type: "milestone_achieved" | "job_completed";
+  jobId: string;
+  status: "queued" | "sent" | "failed";
+  payload: Record<string, string | number>;
 }
 
 export interface TimeEntry {
@@ -194,6 +215,8 @@ export interface TenantData {
   workers?: Worker[];
   reminderLog?: ReminderLog[];
   timeEntries?: TimeEntry[];
+  /** Events waiting to go to Renderfuel Sales (invoices, review requests). */
+  outbox?: OutboundEvent[];
 }
 
 export interface MaterialItem {

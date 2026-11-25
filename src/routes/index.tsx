@@ -9,6 +9,7 @@ import {
   coatingSafe, gbp, jobArea, jobComplete, scaffoldLeft, scaffoldTone, TODAY, weatherFor, DAY_LABELS,
 } from "@/lib/ops/engine";
 import { runwayFor, scaffoldNeeded } from "@/lib/ops/costing";
+import { collectEvents } from "@/lib/ops/milestones";
 import { approveStage, rejectStage, stageDef } from "@/lib/ops/stages";
 import { SECTOR, stageLabel } from "@/lib/ops/labels";
 import type { Job, Region } from "@/lib/ops/types";
@@ -65,12 +66,16 @@ function Dashboard() {
   const findEl = (d: typeof data, it: InspectItem) => d.jobs.find((x) => x.id === it.j.id)!.elevations.find((x) => x.name === it.e.name)!;
   const approve = (it: InspectItem) => {
     let done = false;
+    let sent = 0;
     mutateData((d) => {
       approveStage(findEl(d, it), it.s.code);
       const j = d.jobs.find((x) => x.id === it.j.id)!;
       if (jobComplete(j) && j.status !== "complete") { j.status = "complete"; j.completedAt = new Date().toISOString().slice(0, 10); j.menOnSite = 0; done = true; }
+      const evts = collectEvents(j, d.variations, new Date().toISOString());
+      if (evts.length) { d.outbox = [...evts, ...(d.outbox ?? [])]; sent = evts.length; }
     });
     toast.success(done ? `${it.j.ref} complete — warranty certificate ready.` : `${it.j.ref} ${it.e.name} ${stageDef(it.s.code).short} approved — next stage unlocked for the team.`);
+    if (sent) toast(`${sent} update${sent > 1 ? "s" : ""} queued for Renderfuel Sales (invoice / review request)`);
     setInspect(null);
   };
   const reject = (it: InspectItem, note: string) => {
@@ -100,7 +105,7 @@ function Dashboard() {
           <span className="h-11 px-5 rounded-full bg-ink text-white grid place-items-center text-[14px] font-extrabold shrink-0">Review now</span>
         </button>
       )}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 [&>*]:min-w-0">
         <Kpi label="Active Sites" value={String(active.length)} sub={`${active.reduce((s, j) => s + jobArea(j), 0)}m² total`} />
         <Kpi label="Imminent Scaffold Overruns" value={String(imminent.length)} sub={`${gbp(imminent.reduce((s, j) => s + j.scaffold.weeklyFee, 0))}/wk at risk`} alert={imminent.length > 0} />
         <Kpi label="Rain Delay Window" value={String(wet.length)} sub={wet.length ? wet.map((r) => SECTOR[r]).join(", ") : "All sectors dry"} />
@@ -126,7 +131,7 @@ function Dashboard() {
         );
       })}
 
-      <div className="mt-8 grid lg:grid-cols-[1fr_364px] gap-5 items-start">
+      <div className="mt-8 grid lg:grid-cols-[1fr_364px] gap-5 items-start [&>*]:min-w-0">
         <div>
           <SectionTitle meta={`${fleet.length} shown`}>Active Sites Fleet</SectionTitle>
           <Card className="overflow-hidden">

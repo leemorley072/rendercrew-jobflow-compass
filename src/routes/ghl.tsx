@@ -45,7 +45,7 @@ function GhlHarness() {
 
   return (
     <DesktopShell title="Renderfuel Ops • Renderfuel Sales Won-Job Intake" subtitle={`Linked location ${tenant.ghlLocationId} • ${tenant.name}`}>
-      <div className="grid lg:grid-cols-[1fr_420px] gap-6 items-start">
+      <div className="grid lg:grid-cols-[1fr_420px] [&>*]:min-w-0 gap-6 items-start">
         <div>
           <SectionTitle meta={<button className="underline" onClick={() => setText(JSON.stringify(samplePayload(tenant.ghlLocationId), null, 2))}>New sample</button>}>Webhook payload</SectionTitle>
           <Card className="p-4">

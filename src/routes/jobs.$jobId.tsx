@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type { Job } from "@/lib/ops/types";
 import { Check, Lock, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { Card, DesktopShell, SectionTitle } from "@/components/ops/chrome";
 import { RunwayGauge } from "@/components/ops/RunwayGauge";
+import { useState } from "react";
 import { useOps } from "@/lib/ops/store";
+import { collectEvents, contractSum, defaultMilestones } from "@/lib/ops/milestones";
 import { gbp, jobArea, scaffoldLeft } from "@/lib/ops/engine";
 import { itemsForJob, runwayFor, scaffoldNeeded } from "@/lib/ops/costing";
 import { stageDef } from "@/lib/ops/stages";
@@ -26,6 +29,7 @@ function JobDetail() {
   const { jobId } = Route.useParams();
   const { data, tenant, catalog, mutateData } = useOps();
   const job = data.jobs.find((j) => j.id === jobId);
+  const [batch, setBatch] = useState("");
   if (!job)
     return <DesktopShell title="Job not found" subtitle="It may belong to another account"><Link to="/" className="underline font-extrabold">Back to dashboard</Link></DesktopShell>;
   const crew = data.crews.find((c) => c.id === job.crewId);
@@ -33,17 +37,27 @@ function JobDetail() {
   const items = itemsForJob(catalog, job);
   const vars = data.variations.filter((v) => v.jobId === job.id);
   const left = scaffoldLeft(job);
+  const sum = contractSum(job, data.variations);
+  const milestones = job.milestones ?? defaultMilestones(job.system);
+  const events = (data.outbox ?? []).filter((e) => e.jobId === job.id);
+  const editJob = (fn: (j: Job) => void) => mutateData((d) => { fn(d.jobs.find((x) => x.id === job.id)!); });
+  const addBatch = () => {
+    const b = batch.trim(); if (!b) return;
+    editJob((j) => { j.batches.push(b); }); setBatch(""); toast.success(`Batch ${b} saved to the warranty record`);
+  };
+  const setPct = (id: string, pct: number) => editJob((j) => { const ms = j.milestones ?? defaultMilestones(j.system); const m = ms.find((x) => x.id === id); if (m) m.pct = Math.max(0, Math.min(100, pct)); j.milestones = ms; });
+  const checkNow = () => mutateData((d) => { const j = d.jobs.find((x) => x.id === job.id)!; const ev = collectEvents(j, d.variations, new Date().toISOString()); if (ev.length) { d.outbox = [...ev, ...(d.outbox ?? [])]; toast.success(`${ev.length} update(s) queued for Renderfuel Sales`); } else toast("Nothing new to invoice yet"); });
 
   return (
     <DesktopShell title={`${job.ref} • ${job.address}`} subtitle={`${jobArea(job)}m² ${job.product} • ${job.region} ${job.postcode} • ${job.customer}`}>
-      <div className="grid lg:grid-cols-[1fr_380px] gap-5 items-start">
+      <div className="grid lg:grid-cols-[1fr_380px] [&>*]:min-w-0 gap-5 items-start">
         <div className="space-y-5">
           <SectionTitle meta={stageLabel(job)}>Stage gates</SectionTitle>
           {job.elevations.map((e) => (
             <Card key={e.name} className="p-4">
               <div className="flex justify-between items-baseline"><h2 className="font-display text-[20px]">{e.name} Elevation</h2><span className="font-display text-[20px]">{e.area}m²</span></div>
               {e.defect && <p className="mt-1 text-[13px] font-extrabold text-safety">{e.defect}</p>}
-              <div className="mt-3 grid grid-cols-6 gap-2">
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2">
                 {e.stages.map((s) => (
                   <div key={s.code} className={cn("rounded-[10px] border p-2 min-h-[110px] flex flex-col", s.status === "locked" ? "border-ink/30 text-ink/50" : s.status === "upload" ? "border-dashed border-line" : "border-line")}>
                     {s.photo ? <img src={s.photo} alt="" className="w-full h-12 object-cover rounded-[6px] border border-line" /> : <div className="h-12 grid place-items-center">{s.status === "locked" ? <Lock className="w-5 h-5" /> : <Camera className="w-5 h-5" />}</div>}
@@ -68,6 +82,45 @@ function JobDetail() {
               className="mt-2 w-full p-3 rounded-[10px] border border-line text-[14px] font-semibold outline-none focus:ring-2 focus:ring-safety" />
           </Card>
           <Card className="p-4"><RunwayGauge r={r} /></Card>
+          <Card className="p-4">
+            <div className="flex justify-between items-baseline gap-2">
+              <span className="text-[13px] font-extrabold uppercase tracking-widest">Stage payments</span>
+              <span className="font-display text-[18px]">{gbp(sum)}</span>
+            </div>
+            <p className="mt-1 text-[13px] font-bold text-ink/60">When a stage is approved, an invoice request goes to Renderfuel Sales.</p>
+            <ul className="mt-3 space-y-2">
+              {milestones.map((m) => (
+                <li key={m.id} className="flex items-center gap-2 text-[13px] font-bold">
+                  <input aria-label={`${m.name} percent`} inputMode="numeric" className="w-14 h-10 px-2 rounded-[8px] border border-line text-center font-extrabold" value={m.pct} disabled={m.status !== "waiting"} onChange={(e) => setPct(m.id, Number(e.target.value) || 0)} />
+                  <span className="flex-1 min-w-0">% {m.name}<span className="block text-ink/60">{gbp(Math.round((sum * m.pct) / 100))}</span></span>
+                  <span className={cn("text-[11px] font-extrabold rounded-full px-2 py-0.5 border border-line", m.status === "waiting" ? "" : "bg-go text-white")}>{m.status === "waiting" ? "Waiting" : "Sent to invoice"}</span>
+                </li>
+              ))}
+            </ul>
+            {milestones.reduce((a, m) => a + m.pct, 0) !== 100 && <p className="mt-2 text-[13px] font-extrabold text-safety">Payments add up to {milestones.reduce((a, m) => a + m.pct, 0)}% — should be 100%.</p>}
+            <button onClick={checkNow} className="mt-3 w-full h-11 rounded-full bg-white border border-line font-extrabold">Check for payments due</button>
+            {events.length > 0 && (
+              <ul className="mt-3 space-y-1 border-t border-line pt-2">
+                {events.map((e) => <li key={e.id} className="text-[12px] font-bold text-ink/70">{new Date(e.at).toLocaleString("en-GB", { timeZone: "Europe/London", dateStyle: "short", timeStyle: "short" })} · {e.type === "job_completed" ? "Job complete → review request" : `Invoice ${e.payload["milestone"]} ${gbp(Number(e.payload["amount"]))}`} · {e.status}</li>)}
+              </ul>
+            )}
+          </Card>
+          <Card className="p-4">
+            <p className="text-[13px] font-extrabold uppercase tracking-widest">Topcoat batches & deliveries</p>
+            <p className="mt-1 text-[13px] font-bold text-ink/60">Office only — printed on the warranty certificate for colour matching.</p>
+            <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); addBatch(); }}>
+              <input aria-label="Batch code" value={batch} onChange={(e) => setBatch(e.target.value)} placeholder="e.g. SIL-2291-C" className="flex-1 min-w-0 h-11 px-4 rounded-full border border-line font-semibold outline-none" />
+              <button className="h-11 px-5 rounded-full bg-safety border border-line font-extrabold">Add</button>
+            </form>
+            <ul className="mt-3 space-y-2">
+              {job.batches.length === 0 && <li className="text-[13px] font-bold text-ink/60">No batches saved yet.</li>}
+              {job.batches.map((b, i) => (
+                <li key={i} className="h-11 px-3 rounded-[10px] border border-line flex items-center justify-between font-extrabold text-[14px]">{b}
+                  <button aria-label={`Remove ${b}`} onClick={() => editJob((j) => { j.batches.splice(i, 1); })} className="text-[12px] text-ink/60 underline">Remove</button>
+                </li>
+              ))}
+            </ul>
+          </Card>
           <Card className="p-4">
             <div className="flex justify-between items-baseline"><span className="text-[13px] font-extrabold uppercase tracking-widest">Materials</span><span className={cn("font-display text-[20px]", r.materialSpend > r.materialAllowance && "text-safety")}>{gbp(r.materialSpend)} / {gbp(r.materialAllowance)}</span></div>
             <p className="mt-1 text-[13px] font-bold text-ink/60">Logged on site vs quoted allowance · {r.materialSpend > r.materialAllowance ? `${gbp(r.materialSpend - r.materialAllowance)} over` : `${gbp(r.materialAllowance - r.materialSpend)} left`}</p>
@@ -115,8 +168,7 @@ function JobDetail() {
               <>
                 <Link to="/certificate/$jobId" params={{ jobId: job.id }} className="w-full h-14 rounded-full bg-go text-white border border-line font-extrabold grid place-items-center">Warranty Certificate</Link>
                 {!job.reviewRequested && (
-                  <button onClick={() => { mutateData((d) => { d.jobs.find((x) => x.id === job.id)!.reviewRequested = true; }); toast.success(`Review request queued for ${job.customer}`); }}
-                    className="w-full h-14 rounded-full bg-white border border-line font-extrabold">Send 5-Star Review Request</button>
+                  <button onClick={checkNow} className="w-full h-14 rounded-full bg-white border border-line font-extrabold">Send 5-Star Review Request</button>
                 )}
               </>
             ) : (

@@ -79,7 +79,7 @@ function Timesheets() {
 
   return (
     <DesktopShell title="Timesheets & Audit" subtitle={`${tenant.name} · location checks are office-only and never shown to the team`}>
-      <div className="grid xl:grid-cols-[1fr_360px] gap-6">
+      <div className="grid xl:grid-cols-[1fr_360px] [&>*]:min-w-0 gap-6">
         <div className="space-y-6">
           <section className="bg-white border border-line rounded-[18px] p-5 hard">
             <div className="flex items-center justify-between gap-4 mb-4">
@@ -122,7 +122,7 @@ function Timesheets() {
                 {months.map((m) => <option key={m} value={m}>{new Date(`${m}-01T00:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" })}</option>)}
               </select>
             </div>
-            <table className="w-full text-[14px]">
+            <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-[14px]">
               <thead><tr className="text-left text-[12px] uppercase tracking-widest text-ink/60"><th className="py-2">Worker</th><th className="text-right">Shifts</th><th className="text-right">Hours / target</th><th className="text-right">Lost hrs</th><th className="text-right">Lost £</th><th className="text-right">Off-site</th><th className="text-right">No check-out</th><th className="text-right">Office fixes</th><th className="text-right">Reliability</th></tr></thead>
               <tbody className="divide-y divide-line">
                 {audit.map((a) => (
@@ -143,7 +143,7 @@ function Timesheets() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
             <p className="mt-3 text-[12px] font-bold text-ink/60">Target is 8 hours per shift. Reliability drops for short days, off-site check-ins, forgotten check-outs and shifts the office had to add.</p>
           </section>
         </div>

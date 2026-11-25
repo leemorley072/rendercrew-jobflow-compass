@@ -33,7 +33,7 @@ const Card = ({ title, meta, children }: { title: string; meta?: string; childre
   </section>
 );
 
-const SHORT: Record<SystemKind, string> = { silicone: "Silicone", monocouche: "Mono", ewi: "EWI", cork: "Cork", plaster: "Plaster" };
+const SHORT: Record<SystemKind, string> = { silicone: "Silicone", monocouche: "Mono", ewi: "EWI", cork: "Cork", plaster: "Plaster", roof: "Roof", floor: "Floor", wallcoat: "Wall Coat" };
 const blank = { name: "", phone: "", email: "", postcode: "", rate: "180", skills: [] as SystemKind[], ownTransport: false };
 
 function TeamPage() {
@@ -114,15 +114,15 @@ function TeamPage() {
 
   return (
     <DesktopShell title="Team & Workers" subtitle={`${tenant.name} · ${workers.length} workers · ${data.crews.length} teams`}>
-      <div className="grid grid-cols-[1fr_380px] gap-6 items-start">
+      <div className="grid lg:grid-cols-[1fr_380px] [&>*]:min-w-0 gap-6 items-start">
         <div className="space-y-6">
           <Card title="Workers" meta="Tick workers to pair them into a team">
             {workers.length === 0 && <p className="text-[14px] font-bold text-ink/60">No workers yet. Add your first below — name, mobile, day rate and the trades they can do.</p>}
-            <div className="divide-y divide-line/30">
+            <div className="divide-y divide-line/30 overflow-x-auto">
               {workers.map((w) => {
                 const team = crewOfWorker(data, w.id);
                 return (
-                  <div key={w.id} className="py-3 grid grid-cols-[28px_1.4fr_1fr_90px_auto_40px] gap-3 items-center">
+                  <div key={w.id} className="py-3 min-w-[560px] grid grid-cols-[28px_1.4fr_1fr_90px_auto_40px] gap-3 items-center">
                     <input type="checkbox" aria-label={`Select ${w.name}`} className="w-5 h-5" checked={pick.includes(w.id)} disabled={!!team} onChange={(e) => setPick(e.target.checked ? [...pick, w.id] : pick.filter((x) => x !== w.id))} />
                     <div className="min-w-0">
                       <p className="text-[15px] font-extrabold truncate">{w.name}</p>
