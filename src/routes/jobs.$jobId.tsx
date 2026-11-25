@@ -49,8 +49,9 @@ function JobDetail() {
                     {s.photo ? <img src={s.photo} alt="" className="w-full h-12 object-cover rounded-[6px] border border-line" /> : <div className="h-12 grid place-items-center">{s.status === "locked" ? <Lock className="w-5 h-5" /> : <Camera className="w-5 h-5" />}</div>}
                     <p className="mt-1 text-[11px] font-extrabold">{s.code} · {stageDef(s.code).short}</p>
                     <p className={cn("text-[11px] font-extrabold mt-auto", s.status === "verified" && "text-go", s.review === "rejected" && "text-safety")}>
-                      {s.status === "verified" ? (<span className="inline-flex items-center gap-1"><Check className="w-3 h-3" strokeWidth={4} />Verified</span>) : s.review === "rejected" ? "Recoat" : s.status === "upload" ? "Awaiting photo" : "Locked"}
+                      {s.status === "verified" && s.review === "pending" ? "Awaiting approval" : s.status === "verified" ? (<span className="inline-flex items-center gap-1"><Check className="w-3 h-3" strokeWidth={4} />Approved</span>) : s.review === "rejected" ? "Recoat" : s.status === "upload" ? "Awaiting photo" : "Locked"}
                     </p>
+                    {s.review === "rejected" && s.rejectNote && <p className="text-[11px] font-semibold leading-4">{s.rejectNote}</p>}
                   </div>
                 ))}
               </div>
@@ -59,6 +60,13 @@ function JobDetail() {
         </div>
 
         <aside className="space-y-5">
+          <Card className="p-4">
+            <label htmlFor="access-notes" className="text-[13px] font-extrabold uppercase tracking-widest">Site access & hazards</label>
+            <p className="mt-1 text-[13px] font-bold text-ink/60">Shown at the top of the team's job card.</p>
+            <textarea id="access-notes" rows={4} value={job.accessNotes ?? ""} onChange={(e) => mutateData((d) => { d.jobs.find((x) => x.id === job.id)!.accessNotes = e.target.value; })}
+              placeholder="Key safe code, parking, water/power points, dogs, customer working hours…"
+              className="mt-2 w-full p-3 rounded-[10px] border border-line text-[14px] font-semibold outline-none focus:ring-2 focus:ring-safety" />
+          </Card>
           <Card className="p-4"><RunwayGauge r={r} /></Card>
           <Card className="p-4">
             <div className="flex justify-between items-baseline"><span className="text-[13px] font-extrabold uppercase tracking-widest">Materials</span><span className={cn("font-display text-[20px]", r.materialSpend > r.materialAllowance && "text-safety")}>{gbp(r.materialSpend)} / {gbp(r.materialAllowance)}</span></div>

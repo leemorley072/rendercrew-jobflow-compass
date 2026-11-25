@@ -138,7 +138,7 @@ function Dispatch() {
         <Card className="mt-4 flex flex-wrap items-center gap-6 pr-5 overflow-hidden">
           <div className="w-3 self-stretch bg-safety border-r-2 border-line" />
           <div className="py-5 min-w-[300px] flex-1">
-            <p className="text-[11px] font-extrabold uppercase tracking-widest text-ink/60">Pending job · {pending.source === "ghl" ? "GHL" : "Manual"}{intake.length > 1 && ` · 1 of ${intake.length}`}</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-widest text-ink/60">Pending job · {pending.source === "ghl" ? "Renderfuel Sales" : "Manual"}{intake.length > 1 && ` · 1 of ${intake.length}`}</p>
             <h2 className="mt-1 font-display text-[20px]">{pending.address}</h2>
             <p className="text-[14px] font-extrabold">{jobArea(pending)}m² {SYSTEM_LABEL[pending.system]} • {pending.region} ({pending.postcode.split(" ")[0]})</p>
           </div>
@@ -164,8 +164,8 @@ function Dispatch() {
         </Card>
       ) : (
         <Card className="mt-4 p-5 flex items-center justify-between">
-          <p className="text-[15px] font-extrabold">{data.crews.length === 0 ? "Add crews in the agency admin before scheduling jobs." : "No jobs waiting to schedule. New won jobs from GoHighLevel appear here."}</p>
-          <Link to="/ghl" className="h-11 px-4 rounded-full bg-white border border-line text-[14px] font-extrabold grid place-items-center">Test GHL intake</Link>
+          <p className="text-[15px] font-extrabold">{data.crews.length === 0 ? "Add crews in the agency admin before scheduling jobs." : "No jobs waiting to schedule. New won jobs from Renderfuel Sales appear here."}</p>
+          <Link to="/ghl" className="h-11 px-4 rounded-full bg-white border border-line text-[14px] font-extrabold grid place-items-center">Test Renderfuel Sales intake</Link>
         </Card>
       )}
 

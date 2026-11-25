@@ -1,13 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { CloudRain, X } from "lucide-react";
+import { useState } from "react";
+import { Camera, CloudRain, ZoomIn } from "lucide-react";
+import { PhotoInspector, type InspectItem } from "@/components/ops/PhotoInspector";
 import { toast } from "sonner";
 import { Card, DesktopShell, SectionTitle } from "@/components/ops/chrome";
 import { useOps } from "@/lib/ops/store";
 import {
-  coatingSafe, gbp, jobArea, scaffoldLeft, scaffoldTone, TODAY, weatherFor, DAY_LABELS,
+  coatingSafe, gbp, jobArea, jobComplete, scaffoldLeft, scaffoldTone, TODAY, weatherFor, DAY_LABELS,
 } from "@/lib/ops/engine";
 import { runwayFor, scaffoldNeeded } from "@/lib/ops/costing";
-import { rejectStage, stageDef } from "@/lib/ops/stages";
+import { approveStage, rejectStage, stageDef } from "@/lib/ops/stages";
 import { SECTOR, stageLabel } from "@/lib/ops/labels";
 import type { Job, Region } from "@/lib/ops/types";
 import { cn } from "@/lib/utils";
@@ -16,7 +18,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Command Dashboard · Renderfuel Ops" },
-      { name: "description", content: "Live view of every rendering site: scaffold countdowns, weather alerts, variations and won jobs from GoHighLevel." },
+      { name: "description", content: "Live view of every rendering site: scaffold countdowns, weather alerts, variations and won jobs from Renderfuel Sales." },
       { property: "og:title", content: "Command Dashboard · Renderfuel Ops" },
       { property: "og:description", content: "Live view of every rendering site, crew and alert." },
     ],
@@ -58,6 +60,25 @@ function Dashboard() {
     .flatMap((j) => j.elevations.flatMap((e) => e.stages.filter((s) => s.photo && (s.review === "pending" || s.review === "rejected")).map((s) => ({ j, e, s }))))
     .sort((a, b) => (b.s.uploadedAt ?? "").localeCompare(a.s.uploadedAt ?? ""));
 
+  const pendingQa = feed.filter((f) => f.s.review === "pending");
+  const [inspect, setInspect] = useState<InspectItem | null>(null);
+  const findEl = (d: typeof data, it: InspectItem) => d.jobs.find((x) => x.id === it.j.id)!.elevations.find((x) => x.name === it.e.name)!;
+  const approve = (it: InspectItem) => {
+    let done = false;
+    mutateData((d) => {
+      approveStage(findEl(d, it), it.s.code);
+      const j = d.jobs.find((x) => x.id === it.j.id)!;
+      if (jobComplete(j) && j.status !== "complete") { j.status = "complete"; j.completedAt = new Date().toISOString().slice(0, 10); j.menOnSite = 0; done = true; }
+    });
+    toast.success(done ? `${it.j.ref} complete — warranty certificate ready.` : `${it.j.ref} ${it.e.name} ${stageDef(it.s.code).short} approved — next stage unlocked for the team.`);
+    setInspect(null);
+  };
+  const reject = (it: InspectItem, note: string) => {
+    mutateData((d) => rejectStage(findEl(d, it), it.s.code, note));
+    toast(`${it.j.ref} ${it.e.name} sent back for recoat with your note`);
+    setInspect(null);
+  };
+
   const stopTopcoat = () => {
     mutateData((d) => d.jobs.forEach((j) => { if (wetJobs.some((w) => w.id === j.id)) j.topcoatStopped = true; }));
     toast.success(`Stop-topcoat sent to crews on ${wetJobs.map((j) => j.ref.replace("RF-", "#")).join(" & ")}`);
@@ -68,6 +89,17 @@ function Dashboard() {
       title="Renderfuel Ops • Contractor Command Dashboard"
       subtitle={`${active.length} Active Sites • ${crewCount} Plasterers Deployed • ${imminent.length} Scaffolding Alerts`}
     >
+      <PhotoInspector item={inspect} onClose={() => setInspect(null)} onApprove={approve} onReject={reject} />
+      {pendingQa.length > 0 && (
+        <button onClick={() => setInspect(pendingQa[0]!)} className="mb-4 w-full text-left bg-safety border border-line rounded-[18px] px-5 py-4 flex items-center gap-4 hard">
+          <Camera className="w-6 h-6 shrink-0" strokeWidth={2.5} />
+          <span className="flex-1 text-[15px] font-extrabold">
+            {pendingQa.length} stage photo{pendingQa.length > 1 ? "s" : ""} waiting for your approval — teams can't move on until you check {pendingQa.length > 1 ? "them" : "it"}
+            <span className="block text-[13px] font-bold">{pendingQa.slice(0, 3).map((f) => `${f.j.ref} ${f.e.name} ${stageDef(f.s.code).short}`).join(" · ")}</span>
+          </span>
+          <span className="h-11 px-5 rounded-full bg-ink text-white grid place-items-center text-[14px] font-extrabold shrink-0">Review now</span>
+        </button>
+      )}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Kpi label="Active Sites" value={String(active.length)} sub={`${active.reduce((s, j) => s + jobArea(j), 0)}m² total`} />
         <Kpi label="Imminent Scaffold Overruns" value={String(imminent.length)} sub={`${gbp(imminent.reduce((s, j) => s + j.scaffold.weeklyFee, 0))}/wk at risk`} alert={imminent.length > 0} />
@@ -101,8 +133,8 @@ function Dashboard() {
             {fleet.length === 0 ? (
               <div className="p-10 text-center">
                 <p className="font-display text-[20px]">No sites yet</p>
-                <p className="mt-2 text-[14px] font-bold text-ink/70">Won jobs from GoHighLevel land here once you schedule a crew.</p>
-                <Link to="/ghl" className="inline-flex mt-5 h-12 px-5 items-center rounded-full bg-white border border-line font-extrabold">Test the GHL intake</Link>
+                <p className="mt-2 text-[14px] font-bold text-ink/70">Won jobs from Renderfuel Sales land here once you schedule a crew.</p>
+                <Link to="/ghl" className="inline-flex mt-5 h-12 px-5 items-center rounded-full bg-white border border-line font-extrabold">Test the Renderfuel Sales intake</Link>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -157,9 +189,9 @@ function Dashboard() {
         </div>
 
         <aside>
-          <SectionTitle meta={intake.length ? `${intake.length} new` : <Link to="/ghl" className="underline">Test webhook</Link>}>Inbound from GHL</SectionTitle>
+          <SectionTitle meta={intake.length ? `${intake.length} new` : <Link to="/ghl" className="underline">Test webhook</Link>}>Inbound from Renderfuel Sales</SectionTitle>
           {intake.length === 0 ? (
-            <Card className="p-5"><p className="text-[14px] font-bold">No new won jobs. They appear here the moment a deal is marked won in GoHighLevel.</p></Card>
+            <Card className="p-5"><p className="text-[14px] font-bold">No new won jobs. They appear here the moment a deal is marked won in Renderfuel Sales.</p></Card>
           ) : (
             <div className="space-y-4">
               {intake.slice(0, 2).map((j) => (
@@ -173,27 +205,31 @@ function Dashboard() {
             </div>
           )}
 
-          <div className="mt-6"><SectionTitle meta="Live">Stage-Gate Feed</SectionTitle></div>
+          <div className="mt-6"><SectionTitle meta={pendingQa.length ? `${pendingQa.length} to approve` : "Live"}>Stage-Gate Feed</SectionTitle></div>
           {feed.length === 0 ? (
             <Card className="p-5"><p className="text-[14px] font-bold">All stage photos reviewed. New uploads from site appear here.</p></Card>
           ) : (
             <div className="space-y-3">
               {feed.slice(0, 5).map(({ j, e, s }) => (
-                <Card key={`${j.id}${e.name}${s.code}`} className="p-3 flex gap-3 items-center shadow-none">
-                  <img src={s.photo} alt={`${j.ref} ${e.name} ${stageDef(s.code).short}`} className="w-20 h-20 object-cover rounded-[8px] border border-line" loading="lazy" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-extrabold truncate">{j.ref} · {e.name} {stageDef(s.code).short}</p>
-                    {s.review === "rejected" ? (
-                      <span className="mt-2 inline-block bg-safety border border-line rounded-full px-3 py-0.5 text-[11px] font-extrabold uppercase">Rejected · Recoat</span>
-                    ) : (
-                      <div className="mt-2 flex gap-2">
-                        <button onClick={() => mutateData((d) => { const st = d.jobs.find((x) => x.id === j.id)!.elevations.find((x) => x.name === e.name)!.stages.find((x) => x.code === s.code)!; st.review = "approved"; })}
-                          className="flex-1 h-11 rounded-full bg-go text-white border border-line text-[14px] font-extrabold">Approve</button>
-                        <button aria-label="Reject photo" onClick={() => { mutateData((d) => rejectStage(d.jobs.find((x) => x.id === j.id)!.elevations.find((x) => x.name === e.name)!, s.code)); toast(`${j.ref} ${e.name} sent back for recoat`); }}
-                          className="w-11 h-11 rounded-full bg-white border border-line grid place-items-center"><X className="w-4 h-4" strokeWidth={3} /></button>
-                      </div>
-                    )}
-                  </div>
+                <Card key={`${j.id}${e.name}${s.code}`} className="p-3 shadow-none">
+                  <button onClick={() => setInspect({ j, e, s })} className="w-full flex gap-3 items-center text-left">
+                    <span className="relative shrink-0">
+                      <img src={s.photo} alt={`${j.ref} ${e.name} ${stageDef(s.code).short}`} className="w-24 h-24 object-cover rounded-[8px] border border-line" loading="lazy" />
+                      <ZoomIn className="absolute right-1 bottom-1 w-6 h-6 p-1 rounded-full bg-white border border-line" strokeWidth={2.5} />
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-[13px] font-extrabold truncate">{j.ref} · {e.name} {stageDef(s.code).short}</span>
+                      <span className="block text-[12px] font-bold text-ink/60 truncate">{j.address}</span>
+                      {s.review === "rejected" ? (
+                        <>
+                          <span className="mt-2 inline-block bg-safety border border-line rounded-full px-3 py-0.5 text-[11px] font-extrabold uppercase">Rejected · Recoat</span>
+                          {s.rejectNote && <span className="mt-1 block text-[12px] font-semibold line-clamp-2">{s.rejectNote}</span>}
+                        </>
+                      ) : (
+                        <span className="mt-2 inline-flex h-9 px-4 items-center rounded-full bg-ink text-white text-[13px] font-extrabold">Inspect & approve</span>
+                      )}
+                    </span>
+                  </button>
                 </Card>
               ))}
             </div>

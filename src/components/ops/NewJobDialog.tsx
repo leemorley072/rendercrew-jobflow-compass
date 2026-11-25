@@ -14,7 +14,7 @@ export function NewJobDialog({ children }: { children: ReactNode }) {
   const { data, mutateData } = useOps();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ address: "", postcode: "", customer: "", region: "Leeds" as Region, system: "silicone" as SystemKind, product: "Weber Silicone", quoted: "", front: "50", rear: "45", gable: "25", noScaffold: false, men: "" });
+  const [f, setF] = useState({ address: "", postcode: "", customer: "", region: "Leeds" as Region, system: "silicone" as SystemKind, product: "Weber Silicone", quoted: "", front: "50", rear: "45", gable: "25", noScaffold: false, men: "", access: "" });
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
 
   const submit = (e: React.FormEvent) => {
@@ -28,7 +28,7 @@ export function NewJobDialog({ children }: { children: ReactNode }) {
       toast.error("Add an address, the quoted price and at least one elevation size.");
       return;
     }
-    const job = buildJob(data, { address: f.address.trim(), postcode: f.postcode.trim(), customer: f.customer.trim() || "Homeowner", region: f.region, system: f.system, product: f.product, quoted, elevations: els, scaffold: !f.noScaffold, ...(Number(f.men) > 0 ? { menNeeded: Number(f.men) } : {}) }, "manual");
+    const job = buildJob(data, { address: f.address.trim(), postcode: f.postcode.trim(), customer: f.customer.trim() || "Homeowner", region: f.region, system: f.system, product: f.product, quoted, elevations: els, scaffold: !f.noScaffold, ...(Number(f.men) > 0 ? { menNeeded: Number(f.men) } : {}), accessNotes: f.access }, "manual");
     mutateData((d) => { d.jobs.push(job); });
     toast.success(`${job.ref} added — schedule a crew next.`);
     setOpen(false);
@@ -64,6 +64,7 @@ export function NewJobDialog({ children }: { children: ReactNode }) {
           </div>
           <label><span className={labelCls}>Men needed</span><input className={fieldCls} inputMode="numeric" value={f.men} onChange={set("men")} placeholder={`${DEFAULT_MEN[f.system]} (typical)`} /></label>
           <label className="flex items-center gap-2 text-[14px] font-extrabold"><input type="checkbox" className="w-5 h-5" checked={f.noScaffold} onChange={(e) => setF({ ...f, noScaffold: e.target.checked })} /> No scaffold needed (ground floor, tower or internal)</label>
+          <label className="block"><span className={labelCls}>Site access & hazards</span><textarea className={fieldCls + " h-20 py-2"} value={f.access} onChange={set("access")} placeholder="Key safe code, parking, water/power, dogs, working hours…" /></label>
           <button className="w-full h-14 rounded-full bg-safety border border-line text-[16px] font-extrabold hard">Create & Schedule</button>
         </form>
       </DialogContent>

@@ -20,6 +20,9 @@ export interface Stage {
   photo?: string;
   uploadedAt?: string;
   review?: Review;
+  /** Office note sent back to the team when a photo is rejected. */
+  rejectNote?: string;
+  rejectedAt?: string;
 }
 
 export interface Elevation {
@@ -63,6 +66,8 @@ export interface Job {
   topcoatStopped?: boolean;
   /** How many men the work actually needs (e.g. 1 for a single-room skim). */
   menNeeded?: number;
+  /** Access, parking, key safe, hazards — shown to the team on the site card. */
+  accessNotes?: string;
 }
 
 export interface VariationItem {

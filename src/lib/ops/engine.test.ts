@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { coatingSafe, findPivotTarget, labourRunway, planSchedule, PIVOT_RADIUS_MIN } from "./engine";
 import { seedTenantData } from "./seed";
-import { freshStages, rejectStage, verifyStage } from "./stages";
+import { approveStage, elevationDone, freshStages, rejectStage, verifyStage } from "./stages";
 import type { Job } from "./types";
 
 const job = (over: Partial<Job> = {}): Job => ({ ...seedTenantData().jobs[0]!, ...over });
@@ -44,12 +44,26 @@ describe("rain pivot", () => {
 });
 
 describe("stage gates", () => {
-  it("uploading a photo verifies the stage and unlocks the next", () => {
+  it("uploading a photo waits for office approval before the next stage unlocks", () => {
     const el = { name: "Rear", area: 48, stages: freshStages("silicone", 0) };
     verifyStage(el, "S1", "data:x", "now");
-    expect(el.stages[0]!.status).toBe("verified");
+    expect(el.stages[0]!.review).toBe("pending");
+    expect(el.stages[1]!.status).toBe("locked");
+    approveStage(el, "S1");
     expect(el.stages[1]!.status).toBe("upload");
     expect(el.stages[2]!.status).toBe("locked");
+  });
+  it("a final photo awaiting approval does not complete the elevation", () => {
+    const el = { name: "Rear", area: 48, stages: freshStages("plaster", 2) };
+    verifyStage(el, "P3", "data:x", "now");
+    expect(elevationDone(el)).toBe(false);
+    approveStage(el, "P3");
+    expect(elevationDone(el)).toBe(true);
+  });
+  it("rejection keeps the office note for the team", () => {
+    const el = { name: "Rear", area: 48, stages: freshStages("silicone", 3) };
+    rejectStage(el, "S2", "Mesh overlap under 100mm at window");
+    expect(el.stages[1]!.rejectNote).toBe("Mesh overlap under 100mm at window");
   });
   it("rejecting relocks later stages", () => {
     const el = { name: "Rear", area: 48, stages: freshStages("silicone", 3) };

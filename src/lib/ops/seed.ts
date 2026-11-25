@@ -161,8 +161,14 @@ export function seedTenantData(): TenantData {
   const elm = jobs[0]!.elevations[1]!.stages[1]!;
   Object.assign(elm, { photo: feedMesh, review: "pending", uploadedAt: "2026-11-25T08:12:00Z" });
   jobs[0]!.elevations[1]!.stages[1]!.status = "verified";
+  // Next stage waits for office approval.
+  const after = jobs[0]!.elevations[1]!.stages[2];
+  if (after) after.status = "locked";
+  jobs[0]!.accessNotes = "Key safe on side gate: 4182. Park on the drive, not the lane. Outdoor tap on left gable. Dog in rear garden — keep the gate latched.";
   const oak = jobs[2]!.elevations[0]!.stages[0]!;
-  Object.assign(oak, { photo: feedDowel, review: "pending", uploadedAt: "2026-11-25T07:58:00Z" });
+  Object.assign(oak, { photo: feedDowel, review: "pending", uploadedAt: "2026-11-25T07:58:00Z", status: "verified" });
+  const oakNext = jobs[2]!.elevations[0]!.stages[1];
+  if (oakNext) oakNext.status = "locked";
   const hf = jobs[1]!.elevations[0]!.stages[4]!;
   Object.assign(hf, { photo: feedScratch, review: "rejected", uploadedAt: "2026-11-25T07:40:00Z" });
 

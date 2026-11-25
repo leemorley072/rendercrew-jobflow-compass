@@ -15,7 +15,7 @@ export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
       { title: "Agency Admin · Renderfuel Ops" },
-      { name: "description", content: "Provision contractor accounts, set crews and day rates, and link each GoHighLevel location." },
+      { name: "description", content: "Provision contractor accounts, set crews and day rates, and link each Renderfuel Sales location." },
       { property: "og:title", content: "Agency Admin · Renderfuel Ops" },
       { property: "og:description", content: "Run every contractor account from one place." },
     ],
@@ -34,8 +34,8 @@ function Admin() {
 
   const provision = (e: React.FormEvent) => {
     e.preventDefault();
-    if (nf.name.trim().length < 2 || nf.loc.trim().length < 6) { toast.error("Add the contractor's name and their GHL Location ID."); return; }
-    if (state.tenants.some((x) => x.ghlLocationId === nf.loc.trim())) { toast.error("That GHL location is already linked to another account."); return; }
+    if (nf.name.trim().length < 2 || nf.loc.trim().length < 6) { toast.error("Add the contractor's name and their Renderfuel Sales Location ID."); return; }
+    if (state.tenants.some((x) => x.ghlLocationId === nf.loc.trim())) { toast.error("That Renderfuel Sales location is already linked to another account."); return; }
     const id = `t${Date.now().toString(36)}`;
     mutate((s) => {
       s.tenants.push({ id, name: nf.name.trim(), ghlLocationId: nf.loc.trim(), homeRegion: nf.region, gpFloor: 0.25, defaultDayRate: 570, createdAt: new Date().toISOString().slice(0, 10) });
@@ -65,7 +65,7 @@ function Admin() {
 
   return (
     <div className="min-h-screen bg-stone">
-      <DesktopHeader title="Renderfuel Agency Admin" subtitle={`${state.tenants.length} contractor accounts • GoHighLevel locations linked`} />
+      <DesktopHeader title="Renderfuel Agency Admin" subtitle={`${state.tenants.length} contractor accounts • Renderfuel Sales locations linked`} />
       <main className="p-6 grid lg:grid-cols-[360px_1fr] gap-6 items-start">
         <div className="space-y-4">
           <SectionTitle meta={state.tenants.length}>Contractor accounts</SectionTitle>
@@ -82,7 +82,7 @@ function Admin() {
             <form onSubmit={provision} className="space-y-3">
               <p className="font-display text-[17px]">Provision contractor</p>
               <label className="block"><span className={labelCls}>Business name</span><input className={fieldCls} value={nf.name} onChange={(e) => setNf({ ...nf, name: e.target.value })} /></label>
-              <label className="block"><span className={labelCls}>GHL Location ID</span><input className={fieldCls} value={nf.loc} onChange={(e) => setNf({ ...nf, loc: e.target.value })} placeholder="ve9EPM428h8vShlRW1KT" /></label>
+              <label className="block"><span className={labelCls}>Renderfuel Sales Location ID</span><input className={fieldCls} value={nf.loc} onChange={(e) => setNf({ ...nf, loc: e.target.value })} placeholder="ve9EPM428h8vShlRW1KT" /></label>
               <label className="block"><span className={labelCls}>Home region</span>
                 <select className={fieldCls} value={nf.region} onChange={(e) => setNf({ ...nf, region: e.target.value as Region })}><option>Leeds</option><option>Harrogate</option><option>York</option></select></label>
               <button className="w-full h-14 rounded-full bg-safety border border-line font-extrabold hard">Create Sub-Account</button>
@@ -98,7 +98,7 @@ function Admin() {
               <button onClick={() => { mutate((s) => { s.activeTenantId = t.id; s.role = "boss"; }); navigate({ to: "/" }); }} className="h-12 px-5 rounded-full bg-ink text-white font-extrabold">Open as Contractor →</button>
             </div>
             <div className="mt-5 grid md:grid-cols-3 gap-4">
-              <label><span className={labelCls}>GHL Location ID</span><input className={fieldCls} value={t.ghlLocationId} onChange={(e) => editTenant((x) => { x.ghlLocationId = e.target.value.trim(); })} /></label>
+              <label><span className={labelCls}>Renderfuel Sales Location ID</span><input className={fieldCls} value={t.ghlLocationId} onChange={(e) => editTenant((x) => { x.ghlLocationId = e.target.value.trim(); })} /></label>
               <label><span className={labelCls}>Gross profit floor %</span><input className={fieldCls} inputMode="numeric" value={Math.round(t.gpFloor * 100)} onChange={(e) => editTenant((x) => { x.gpFloor = Math.min(90, Math.max(0, Number(e.target.value) || 0)) / 100; })} /></label>
               <label><span className={labelCls}>Default gang day rate £</span><input className={fieldCls} inputMode="numeric" value={t.defaultDayRate} onChange={(e) => editTenant((x) => { x.defaultDayRate = Number(e.target.value) || 0; })} /></label>
             </div>

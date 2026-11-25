@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { AlertTriangle, Camera, Check, Hand, Lock, Minus, Plus, FileCheck2 } from "lucide-react";
+import { AlertTriangle, Camera, Check, Clock, Hand, Lock, Minus, Plus, FileCheck2 } from "lucide-react";
 import { toast } from "sonner";
 import { MobileFrame, MobileHeader, MobileTabs, type MobileTab } from "@/components/ops/chrome";
 import { RunwayGauge } from "@/components/ops/RunwayGauge";
 import { nowLabel, readPhoto, useOps } from "@/lib/ops/store";
-import { todaysJobFor, coatingSafe, gbp, jobComplete, scaffoldLeft, TODAY, weatherFor } from "@/lib/ops/engine";
+import { todaysJobFor, coatingSafe, gbp, scaffoldLeft, TODAY, weatherFor } from "@/lib/ops/engine";
 import { bagsUsed, closeOutShift, itemsForJob, runwayFor, scaffoldNeeded } from "@/lib/ops/costing";
 import { currentStage, elevationDone, stageDef, verifyStage } from "@/lib/ops/stages";
 import { cn } from "@/lib/utils";
@@ -78,23 +78,13 @@ function JobCard() {
     try {
       const photo = await readPhoto(f);
       const t = target.current;
-      let doneJob = false;
       mutateData((d) => {
         const j = d.jobs.find((x) => x.id === job.id)!;
         const e2 = j.elevations.find((x) => x.name === t.el)!;
         verifyStage(e2, t.code, photo, new Date().toISOString());
-        if (jobComplete(j)) {
-          j.status = "complete";
-          j.completedAt = new Date().toISOString().slice(0, 10);
-          j.menOnSite = 0;
-          doneJob = true;
-        }
       });
       const def = stageDef(t.code);
-      const nextIdx = el.stages.findIndex((s) => s.code === t.code) + 1;
-      const next = el.stages[nextIdx];
-      if (doneJob) toast.success("Job complete — warranty certificate ready.");
-      else toast.success(`${def.short} verified${next ? ` — ${stageDef(next.code).short} unlocked` : ` — ${t.el} elevation done`}`);
+      toast.success(`${def.short} photo sent — the office will approve it before the next stage unlocks.`);
       if (wet && def.weatherSensitive) toast.warning("Coating hold is on today — check the coat isn't rain-damaged.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't read that photo.");
@@ -112,6 +102,12 @@ function JobCard() {
       <div className="px-4 pb-48 space-y-4">
         {tab === "job" && (
           <>
+            {job.accessNotes?.trim() && (
+              <section className="bg-ink text-white border border-line rounded-[18px] p-4 hard">
+                <p className="text-[12px] font-extrabold uppercase tracking-widest text-safety flex items-center gap-2"><AlertTriangle className="w-4 h-4" strokeWidth={2.5} /> Site access & hazards</p>
+                <p className="mt-2 text-[15px] font-semibold whitespace-pre-line leading-6">{job.accessNotes}</p>
+              </section>
+            )}
             {hasScaffold && <section className="bg-white border border-line rounded-[18px] p-4 hard">
               <div className="flex justify-between items-baseline">
                 <span className="text-[14px] font-extrabold uppercase">Scaffold hire</span>
@@ -164,17 +160,19 @@ function JobCard() {
                   return (
                     <div key={s.code} className="bg-white border border-line rounded-[18px] p-4 hard min-h-[124px] relative overflow-hidden">
                       {s.photo && <img src={s.photo} alt="" className="absolute right-2 top-2 w-12 h-12 rounded-[6px] border border-line object-cover" />}
-                      <Check className="w-6 h-6 text-go" strokeWidth={3.5} />
+                      {s.review === "pending" ? <Clock className="w-6 h-6" strokeWidth={3} /> : <Check className="w-6 h-6 text-go" strokeWidth={3.5} />}
                       <p className="mt-3 font-display text-[16px] leading-5">{d.short}</p>
-                      <p className="text-[13px] font-extrabold text-go">Verified</p>
+                      {s.review === "pending" ? <p className="text-[13px] font-extrabold text-ink/70">Awaiting office approval</p> : <p className="text-[13px] font-extrabold text-go">Approved</p>}
                     </div>
                   );
                 if (s.status === "upload")
                   return (
-                    <button key={s.code} onClick={() => pick(s.code)} disabled={busy} className="text-left bg-white border border-dashed border-line rounded-[18px] p-4 min-h-[124px]">
+                    <button key={s.code} onClick={() => pick(s.code)} disabled={busy} className={cn("text-left border rounded-[18px] p-4 min-h-[124px]", s.review === "rejected" ? "bg-safety border-line col-span-2 hard" : "bg-white border-dashed border-line")}>
                       <Camera className="w-6 h-6" strokeWidth={2.5} />
                       <p className="mt-3 font-display text-[16px] leading-5">{d.short}</p>
-                      <p className={cn("text-[13px] font-extrabold", s.review === "rejected" ? "text-safety" : "")}>{busy ? "Uploading…" : s.review === "rejected" ? "Recoat · re-upload" : "Tap to Upload"}</p>
+                      <p className={cn("text-[13px] font-extrabold", s.review === "rejected" ? "text-ink uppercase" : "")}>{busy ? "Uploading…" : s.review === "rejected" ? "Recoat required" : "Tap to Upload"}</p>
+                      {s.review === "rejected" && <p className="mt-1 text-[14px] font-semibold leading-5">Office note: {s.rejectNote ?? "Redo and re-photograph."}</p>}
+                      {s.review === "rejected" && <p className="mt-2 text-[13px] font-extrabold underline">Snap a new photo once fixed</p>}
                     </button>
                   );
                 return (

@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/ghl")({
   head: () => ({
     meta: [
-      { title: "GHL Won-Job Intake · Renderfuel Ops" },
-      { name: "description", content: "Test harness for GoHighLevel won-opportunity webhooks: send a payload and watch the job card spawn." },
-      { property: "og:title", content: "GHL Intake · Renderfuel Ops" },
-      { property: "og:description", content: "Won deals in GoHighLevel become job cards automatically." },
+      { title: "Renderfuel Sales Won-Job Intake · Renderfuel Ops" },
+      { name: "description", content: "Test harness for Renderfuel Sales won-opportunity webhooks: send a payload and watch the job card spawn." },
+      { property: "og:title", content: "Renderfuel Sales Intake · Renderfuel Ops" },
+      { property: "og:description", content: "Won deals in Renderfuel Sales become job cards automatically." },
     ],
   }),
   component: GhlHarness,
@@ -44,12 +44,12 @@ function GhlHarness() {
   };
 
   return (
-    <DesktopShell title="Renderfuel Ops • GHL Won-Job Intake" subtitle={`Linked location ${tenant.ghlLocationId} • ${tenant.name}`}>
+    <DesktopShell title="Renderfuel Ops • Renderfuel Sales Won-Job Intake" subtitle={`Linked location ${tenant.ghlLocationId} • ${tenant.name}`}>
       <div className="grid lg:grid-cols-[1fr_420px] gap-6 items-start">
         <div>
           <SectionTitle meta={<button className="underline" onClick={() => setText(JSON.stringify(samplePayload(tenant.ghlLocationId), null, 2))}>New sample</button>}>Webhook payload</SectionTitle>
           <Card className="p-4">
-            <p className="text-[13px] font-bold text-ink/70">This is what GoHighLevel sends when an opportunity moves to <b>Won</b>. Edit it to test bad data, another location, or a deal that isn't won.</p>
+            <p className="text-[13px] font-bold text-ink/70">This is what Renderfuel Sales sends when an opportunity moves to <b>Won</b>. Edit it to test bad data, another location, or a deal that isn't won.</p>
             <textarea value={text} onChange={(e) => setText(e.target.value)} spellCheck={false}
               className="mt-3 w-full h-[420px] font-mono text-[13px] p-4 rounded-[10px] border border-line bg-stone/30 outline-none" />
             <button onClick={send} disabled={sending} className="mt-4 w-full h-16 rounded-full bg-safety border border-line text-[17px] font-extrabold hard disabled:opacity-60">

@@ -73,11 +73,12 @@ export function currentStage(el: Elevation): Stage | undefined {
   return el.stages.find((s) => s.status === "upload");
 }
 
+/** Done only when every stage photo is in and the office has approved it. */
 export function elevationDone(el: Elevation) {
-  return el.stages.every((s) => s.status === "verified");
+  return el.stages.every((s) => s.status === "verified" && s.review !== "pending");
 }
 
-/** Marks a stage verified with its photo and unlocks the next one. */
+/** Records the stage photo; the next stage stays locked until the office approves it. */
 export function verifyStage(el: Elevation, code: string, photo: string, at: string) {
   const i = el.stages.findIndex((s) => s.code === code);
   const st = el.stages[i];
@@ -86,18 +87,31 @@ export function verifyStage(el: Elevation, code: string, photo: string, at: stri
   st.photo = photo;
   st.uploadedAt = at;
   st.review = "pending";
+  delete st.rejectNote;
+  delete st.rejectedAt;
+  return true;
+}
+
+/** Office approval: marks the photo approved and unlocks the next stage. */
+export function approveStage(el: Elevation, code: string) {
+  const i = el.stages.findIndex((s) => s.code === code);
+  const st = el.stages[i];
+  if (!st || st.status !== "verified") return false;
+  st.review = "approved";
   const next = el.stages[i + 1];
   if (next && next.status === "locked") next.status = "upload";
   return true;
 }
 
 /** A rejected photo sends the stage back for a recoat and relocks everything after it. */
-export function rejectStage(el: Elevation, code: string) {
+export function rejectStage(el: Elevation, code: string, note = "", at = new Date().toISOString()) {
   const i = el.stages.findIndex((s) => s.code === code);
   const st = el.stages[i];
   if (!st) return;
   st.status = "upload";
   st.review = "rejected";
+  st.rejectNote = note.trim() || "Not up to standard — redo and re-photograph.";
+  st.rejectedAt = at;
   el.stages.forEach((s, j) => {
     if (j > i) {
       s.status = "locked";

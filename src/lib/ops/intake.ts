@@ -21,6 +21,7 @@ export const ghlWonPayload = z.object({
     system: z.enum(["monocouche", "silicone", "ewi", "cork", "plaster"]),
     product: z.string().min(2).max(60),
     elevations: z.array(z.object({ name: z.string().min(1).max(30), area: z.number().positive().max(2000) })).min(1).max(8),
+    accessNotes: z.string().max(1000).optional(),
   }),
 });
 export type GhlWonPayload = z.infer<typeof ghlWonPayload>;
@@ -44,6 +45,7 @@ export function samplePayload(locationId: string) {
         { name: "Rear", area: 52 },
         { name: "Gable", area: 34 },
       ],
+      accessNotes: "Key safe by back door: 2741. Narrow lane — park the van in the pub layby.",
     },
   };
 }
@@ -65,6 +67,7 @@ export interface NewJobInput {
   elevations: { name: string; area: number }[];
   /** False for ground-floor, tower or internal work with no scaffold hire. */
   scaffold?: boolean;
+  accessNotes?: string;
 }
 
 export function buildJob(d: TenantData, input: NewJobInput, source: "ghl" | "manual", oppId?: string): Job {
@@ -92,6 +95,7 @@ export function buildJob(d: TenantData, input: NewJobInput, source: "ghl" | "man
     manDays: 0,
     usage: {},
     status: "intake",
+    ...(input.accessNotes?.trim() ? { accessNotes: input.accessNotes.trim() } : {}),
     source,
     ...(oppId ? { ghlOpportunityId: oppId } : {}),
     ...(input.menNeeded ? { menNeeded: input.menNeeded } : {}),
@@ -101,7 +105,7 @@ export function buildJob(d: TenantData, input: NewJobInput, source: "ghl" | "man
 
 export type IntakeResult = { status: number; message: string; job?: Job };
 
-/** Same checks the live GoHighLevel webhook will run before a job is created. */
+/** Same checks the live Renderfuel Sales webhook will run before a job is created. */
 export function processWebhook(d: TenantData, locationId: string, raw: unknown): IntakeResult {
   const parsed = ghlWonPayload.safeParse(raw);
   if (!parsed.success) {
@@ -123,6 +127,7 @@ export function processWebhook(d: TenantData, locationId: string, raw: unknown):
       product: p.customFields.product,
       quoted: p.monetaryValue,
       elevations: p.customFields.elevations,
+      ...(p.customFields.accessNotes ? { accessNotes: p.customFields.accessNotes } : {}),
     },
     "ghl",
     p.id,

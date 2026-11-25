@@ -11,9 +11,9 @@ import { NewJobDialog } from "./NewJobDialog";
 import { cn } from "@/lib/utils";
 
 const ROLES: { role: Role; label: string; to: "/admin" | "/" | "/site" }[] = [
-  { role: "agency", label: "Agency Admin", to: "/admin" },
-  { role: "boss", label: "Contractor Boss", to: "/" },
-  { role: "lead", label: "Site Lead", to: "/site" },
+  { role: "agency", label: "Agency Mode", to: "/admin" },
+  { role: "boss", label: "Contractor Mode", to: "/" },
+  { role: "lead", label: "Team Mode", to: "/site" },
 ];
 
 export function useRoleSwitch() {
@@ -107,11 +107,13 @@ const TABS = [
   { to: "/", label: "Sites" },
   { to: "/dispatch", label: "Dispatch" },
   { to: "/team", label: "Team" },
-  { to: "/ghl", label: "GHL Leads" },
+  { to: "/ghl", label: "Renderfuel Sales" },
   { to: "/site", label: "Site View" },
 ] as const;
 
 export function DesktopTabs() {
+  const { data } = useOps();
+  const qa = data.jobs.reduce((n, j) => n + j.elevations.reduce((m, e) => m + e.stages.filter((s) => s.photo && s.review === "pending").length, 0), 0);
   return (
     <nav className="h-14 px-6 flex items-center gap-2 bg-stone border-b-2 border-line">
       {TABS.map((t) => (
@@ -119,9 +121,10 @@ export function DesktopTabs() {
           key={t.to}
           to={t.to}
           activeOptions={{ exact: t.to === "/" }}
-          className="h-11 px-5 rounded-full grid place-items-center text-[14px] font-extrabold border border-transparent hover:border-line data-[status=active]:bg-ink data-[status=active]:text-white data-[status=active]:border-line"
+          className="h-11 px-5 rounded-full flex items-center text-[14px] font-extrabold border border-transparent hover:border-line data-[status=active]:bg-ink data-[status=active]:text-white data-[status=active]:border-line"
         >
           {t.label}
+          {t.to === "/" && qa > 0 && <span aria-label={`${qa} photos to approve`} className="ml-2 min-w-6 h-6 px-1.5 rounded-full bg-safety text-ink border border-line text-[12px] font-extrabold grid place-items-center">{qa}</span>}
         </Link>
       ))}
     </nav>
