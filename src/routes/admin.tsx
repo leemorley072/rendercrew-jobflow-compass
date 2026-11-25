@@ -1,3 +1,4 @@
+import { SYSTEMS, SYSTEM_LABEL } from "@/lib/ops/stages";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { RotateCcw, Trash2 } from "lucide-react";
@@ -171,7 +172,7 @@ function PriceBook({ tenantId, tenantName }: { tenantId: string; tenantName: str
           const o = overrides[m.id];
           return (
             <div key={m.id} className="grid grid-cols-[1.6fr_70px_1fr_90px_1fr_90px_44px] gap-2 items-center px-4 py-2 border-b border-line">
-              <div><p className="text-[14px] font-extrabold leading-5">{m.name}</p><p className="text-[11px] font-bold text-ink/50 uppercase">{m.system === "all" ? "All systems" : m.system}</p></div>
+              <div><p className="text-[14px] font-extrabold leading-5">{m.name}</p><p className="text-[11px] font-bold text-ink/50 uppercase">{m.system === "all" ? "All systems" : SYSTEM_LABEL[m.system]}</p></div>
               <span className="text-[13px] font-bold">{m.unit}</span>
               <input aria-label={`Agency supplier for ${m.name}`} className={fieldCls + " h-10"} value={m.supplier} onChange={(e) => setAgency(m.id, (x) => { x.supplier = e.target.value; })} />
               <input aria-label={`Agency price for ${m.name}`} className={fieldCls + " h-10"} inputMode="decimal" value={m.price} onChange={(e) => setAgency(m.id, (x) => { x.price = Number(e.target.value) || 0; })} />
@@ -188,7 +189,7 @@ function PriceBook({ tenantId, tenantName }: { tenantId: string; tenantName: str
           <label><span className={labelCls}>Price £</span><input className={fieldCls} inputMode="decimal" value={nf.price} onChange={(e) => setNf({ ...nf, price: e.target.value })} /></label>
           <label><span className={labelCls}>System</span>
             <select className={fieldCls} value={nf.system} onChange={(e) => setNf({ ...nf, system: e.target.value as MaterialItem["system"] })}>
-              <option value="all">All</option><option value="silicone">Silicone</option><option value="monocouche">Monocouche</option>
+              <option value="all">All</option>{SYSTEMS.map((k) => <option key={k} value={k}>{SYSTEM_LABEL[k]}</option>)}
             </select></label>
           <button className="h-12 px-5 rounded-full bg-safety border border-line font-extrabold">Add Item</button>
         </form>

@@ -34,3 +34,5 @@ use the editor.
 - Business rules (runway, rain pivot, crew ranking, stage gates, GHL payload checks) are pure functions in `src/lib/ops/*` with tests in `engine.test.ts`; pages only call them.
 - Material prices: agency price book (`OpsState.agencyMaterials`) is the benchmark; each tenant's `materialOverrides` win via `resolveCatalog` — so new contractors cost jobs from day one yet keep their own trade discounts.
 - Labour is costed per man-day (crew day rate ÷ crew size × men on site at close-out), and jobs with `scaffold.required === false` carry no scaffold cost or countdown — solo and ground-level work must not burn full-gang or scaffold budget.
+- Workers live in `TenantData.workers`; a team (`Crew`) with `memberIds` gets men/day rate/skills from its workers via `syncCrew`, so costing and dispatch keep reading crew fields unchanged.
+- Team re-routing and worker access are pure functions (`team.ts` planPivot, engine `todaysJobFor`/`middayReminders`); the site view and job card gate on `todaysJobFor` for the Site Lead role.

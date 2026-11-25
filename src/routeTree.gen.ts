@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as DispatchRouteImport } from './routes/dispatch'
 import { Route as GhlRouteImport } from './routes/ghl'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as CertificateJobIdRouteImport } from './routes/certificate.$jobId'
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
 import { Route as SiteIndexRouteImport } from './routes/site.index'
@@ -38,6 +39,11 @@ const DispatchRoute = DispatchRouteImport.update({
 const GhlRoute = GhlRouteImport.update({
   id: '/ghl',
   path: '/ghl',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CertificateJobIdRoute = CertificateJobIdRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/dispatch': typeof DispatchRoute
   '/ghl': typeof GhlRoute
+  '/team': typeof TeamRoute
   '/certificate/$jobId': typeof CertificateJobIdRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/site/$jobId': typeof SiteJobIdRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/dispatch': typeof DispatchRoute
   '/ghl': typeof GhlRoute
+  '/team': typeof TeamRoute
   '/certificate/$jobId': typeof CertificateJobIdRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/site/$jobId': typeof SiteJobIdRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/dispatch': typeof DispatchRoute
   '/ghl': typeof GhlRoute
+  '/team': typeof TeamRoute
   '/certificate/$jobId': typeof CertificateJobIdRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
   '/site/$jobId': typeof SiteJobIdRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dispatch'
     | '/ghl'
+    | '/team'
     | '/certificate/$jobId'
     | '/jobs/$jobId'
     | '/site/$jobId'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dispatch'
     | '/ghl'
+    | '/team'
     | '/certificate/$jobId'
     | '/jobs/$jobId'
     | '/site/$jobId'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dispatch'
     | '/ghl'
+    | '/team'
     | '/certificate/$jobId'
     | '/jobs/$jobId'
     | '/site/$jobId'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   DispatchRoute: typeof DispatchRoute
   GhlRoute: typeof GhlRoute
+  TeamRoute: typeof TeamRoute
   CertificateJobIdRoute: typeof CertificateJobIdRoute
   JobsJobIdRoute: typeof JobsJobIdRoute
   SiteJobIdRoute: typeof SiteJobIdRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/ghl'
       fullPath: '/ghl'
       preLoaderRoute: typeof GhlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/certificate/$jobId': {
@@ -240,6 +260,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   DispatchRoute: DispatchRoute,
   GhlRoute: GhlRoute,
+  TeamRoute: TeamRoute,
   CertificateJobIdRoute: CertificateJobIdRoute,
   JobsJobIdRoute: JobsJobIdRoute,
   SiteJobIdRoute: SiteJobIdRoute,

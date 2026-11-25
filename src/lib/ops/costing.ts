@@ -1,4 +1,4 @@
-import type { Crew, Job, MaterialItem, MaterialOverrides, Tenant, TenantData, Variation } from "./types";
+import type { Worker, Crew, Job, MaterialItem, MaterialOverrides, Tenant, TenantData, Variation } from "./types";
 
 /** Agency benchmark price book every new contractor account inherits. */
 export const DEFAULT_MATERIALS: MaterialItem[] = [
@@ -11,6 +11,18 @@ export const DEFAULT_MATERIALS: MaterialItem[] = [
   { id: "bead-stop", name: "Stop bead 2.5m", unit: "length", supplier: "Minster", price: 3.2, system: "all" },
   { id: "bead-bell", name: "Bellcast bead 2.5m", unit: "length", supplier: "Minster", price: 3.6, system: "all" },
   { id: "mastic", name: "Mastic sealant", unit: "tube", supplier: "Encon", price: 6.5, system: "all" },
+  { id: "ewi-board", name: "EPS insulation board 100mm", unit: "board", supplier: "Minster", price: 9.8, system: "ewi" },
+  { id: "ewi-dowel", name: "Mechanical fixing dowels (box 100)", unit: "box", supplier: "Minster", price: 38, system: "ewi" },
+  { id: "ewi-adhesive", name: "EWI adhesive / basecoat 25kg", unit: "bag", supplier: "Minster", price: 12.5, system: "ewi" },
+  { id: "ewi-mesh", name: "EWI reinforcing mesh 50m", unit: "roll", supplier: "Minster", price: 44, system: "ewi" },
+  { id: "ewi-topcoat", name: "Silicone finish coat 25kg", unit: "tub", supplier: "Encon", price: 68, system: "ewi" },
+  { id: "cork-corksol", name: "CorkSol spray cork 25kg", unit: "tub", supplier: "CorkSol", price: 115, system: "cork" },
+  { id: "cork-spraycork", name: "SprayCork UK 15kg", unit: "tub", supplier: "SprayCork UK", price: 89, system: "cork" },
+  { id: "cork-primer", name: "Cork substrate primer 5L", unit: "tub", supplier: "CorkSol", price: 32, system: "cork" },
+  { id: "plaster-finish", name: "Multi-finish plaster 25kg", unit: "bag", supplier: "Travis Perkins", price: 9.6, system: "plaster" },
+  { id: "plaster-bonding", name: "Bonding coat 25kg", unit: "bag", supplier: "Travis Perkins", price: 11.2, system: "plaster" },
+  { id: "plaster-pva", name: "PVA / Blue Grit 5L", unit: "tub", supplier: "Travis Perkins", price: 18, system: "plaster" },
+  { id: "plaster-scrim", name: "Scrim tape 90m", unit: "roll", supplier: "Travis Perkins", price: 3.5, system: "plaster" },
 ];
 
 /** Contractor price wins over the agency benchmark when set. */
@@ -91,4 +103,20 @@ export function runwayFor(job: Job, d: TenantData, tenant: Tenant, catalog: Mate
     men: crew?.men ?? 3,
     spend: materialSpend(job, catalog),
   });
+}
+
+/** Team men, day rate and skills follow its individual workers. */
+export function syncCrew(crew: Crew, workers: Worker[]) {
+  const members = (crew.memberIds ?? []).map((id) => workers.find((w) => w.id === id)).filter((w): w is Worker => !!w);
+  if (members.length === 0) return crew;
+  crew.memberIds = members.map((m) => m.id);
+  if (!crew.driverId || !crew.memberIds.includes(crew.driverId)) crew.driverId = members[0]!.id;
+  const driver = members.find((m) => m.id === crew.driverId)!;
+  crew.men = members.length;
+  crew.dayRate = members.reduce((s, m) => s + m.dayRate, 0);
+  crew.skills = [...new Set(members.flatMap((m) => m.skills))];
+  crew.lead = driver.name.split(" ")[0]!;
+  crew.phone = driver.phone;
+  crew.base = driver.base;
+  return crew;
 }

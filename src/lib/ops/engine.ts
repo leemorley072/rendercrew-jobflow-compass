@@ -1,4 +1,5 @@
 import { stageDef, elevationDone, currentStage } from "./stages";
+import { crewOfWorker, planPivot, safeTargets, REMINDER_TIME } from "./team";
 import type { Booking, Crew, DayWeather, Job, Region, TenantData } from "./types";
 
 export const RAIN_LIMIT = 30;
@@ -65,6 +66,8 @@ export interface PivotDecision {
   toLabel?: string;
   minutes?: number;
   reason: string;
+  /** Split pivots: which workers go where. */
+  assignments?: { workerIds: string[]; jobId: string; label: string; minutes: number }[];
 }
 
 export interface Cell {
@@ -77,22 +80,9 @@ export interface Cell {
   jobId?: string | undefined;
 }
 
-/** Nearest rain-safe prep task on an active or upcoming site within the pivot radius. */
+/** Nearest rain-safe task (outdoor prep or indoor work) within the pivot radius. */
 export function findPivotTarget(from: { x: number; y: number }, jobs: Job[], excludeJobId?: string) {
-  let best: { job: Job; minutes: number; task: string } | undefined;
-  for (const j of jobs) {
-    if (j.id === excludeJobId || j.status === "complete") continue;
-    const prepEl = j.elevations.find((e) => {
-      const c = currentStage(e);
-      return c && stageDef(c.code).prep;
-    });
-    if (!prepEl) continue;
-    const c = currentStage(prepEl)!;
-    const minutes = travelMinutes(from, j.coords);
-    if (minutes > PIVOT_RADIUS_MIN) continue;
-    if (!best || minutes < best.minutes) best = { job: j, minutes, task: stageDef(c.code).short };
-  }
-  return best;
+  return safeTargets(from, jobs, excludeJobId)[0];
 }
 
 /**
@@ -120,15 +110,26 @@ export function planSchedule(d: TenantData, today = TODAY, days = 14) {
       if (day >= today && !coatingSafe(w)) {
         flush(day);
         runStart = day + 1;
-        const t = findPivotTarget(job.coords, d.jobs, job.id);
+        const crew = d.crews.find((c) => c.id === b.crewId);
+        const plan = crew ? planPivot(d, crew, job.coords, job.id) : { mode: "hold" as const };
         const reason = w.rain > RAIN_LIMIT ? `${w.rain}% rain` : `${w.temp}°C`;
-        if (t) {
+        if (plan.mode === "team") {
+          const t = plan.target;
           const label = `↻ ${t.job.ref.replace("RF-", "#")} · ${t.task}`;
           cells.push({ key: `${b.id}-p${day}`, crewId: b.crewId, start: day, len: 1, kind: "pivot", label, jobId: t.job.id });
-          decisions.push({ crewId: b.crewId, day, fromJobId: job.id, fromLabel: b.label, toJobId: t.job.id, toLabel: `${t.job.address} · ${t.task}`, minutes: t.minutes, reason });
+          decisions.push({ crewId: b.crewId, day, fromJobId: job.id, fromLabel: b.label, toJobId: t.job.id, toLabel: `${t.job.address} · ${t.task} (whole team)`, minutes: t.minutes, reason });
+        } else if (plan.mode === "split") {
+          const names = (ids: string[]) => ids.map((id) => d.workers?.find((x) => x.id === id)?.name.split(" ")[0] ?? "?").join(" + ");
+          const first = plan.assignments[0]!.target;
+          cells.push({ key: `${b.id}-p${day}`, crewId: b.crewId, start: day, len: 1, kind: "pivot", label: `↻ Split · ${plan.assignments.length} sites`, jobId: first.job.id });
+          decisions.push({
+            crewId: b.crewId, day, fromJobId: job.id, fromLabel: b.label, toJobId: first.job.id, minutes: first.minutes, reason,
+            toLabel: plan.assignments.map((x) => `${names(x.workerIds)} → ${x.target.job.address} · ${x.target.task}`).join("; "),
+            assignments: plan.assignments.map((x) => ({ workerIds: x.workerIds, jobId: x.target.job.id, label: `${x.target.job.address} · ${x.target.task}`, minutes: x.target.minutes })),
+          });
         } else {
           cells.push({ key: `${b.id}-h${day}`, crewId: b.crewId, start: day, len: 1, kind: "hold", label: "Rain Hold" });
-          decisions.push({ crewId: b.crewId, day, fromJobId: job.id, fromLabel: b.label, reason: `${reason} · no prep task within ${PIVOT_RADIUS_MIN} min` });
+          decisions.push({ crewId: b.crewId, day, fromJobId: job.id, fromLabel: b.label, reason: `${reason} · no safe task within ${PIVOT_RADIUS_MIN} min` });
         }
       }
     }
@@ -186,3 +187,28 @@ export function rankCrews(d: TenantData, job: Job, today = TODAY) {
 
 export const gbp = (n: number, dp = 0) =>
   "£" + n.toLocaleString("en-GB", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+
+/** The one job a worker may see and update today — follows the schedule, rain pivots and splits. */
+export function todaysJobFor(d: TenantData, workerId: string, today = TODAY): Job | undefined {
+  const crew = crewOfWorker(d, workerId);
+  if (!crew) return undefined;
+  const { cells, decisions } = planSchedule(d, today);
+  const dec = decisions.find((x) => x.crewId === crew.id && x.day === today);
+  let jobId: string | undefined;
+  if (dec?.assignments) jobId = dec.assignments.find((a) => a.workerIds.includes(workerId))?.jobId;
+  else if (dec) jobId = dec.toJobId;
+  else jobId = cells.find((c) => c.crewId === crew.id && c.jobId && c.kind !== "open" && today >= c.start && today < c.start + c.len)?.jobId;
+  return d.jobs.find((j) => j.id === jobId && j.status !== "complete");
+}
+
+export interface Reminder { workerId: string; name: string; phone: string; jobId: string; message: string }
+
+/** Midday nudge to everyone on site today: snap stage photos and log materials. */
+export function middayReminders(d: TenantData, origin: string, today = TODAY): Reminder[] {
+  return (d.workers ?? []).flatMap((w) => {
+    const job = todaysJobFor(d, w.id, today);
+    if (!job || !w.phone) return [];
+    const message = `Renderfuel ${REMINDER_TIME}: ${w.name.split(" ")[0]}, quick update for ${job.address} — snap stage photos and log materials used: ${origin}/site/${job.id}`;
+    return [{ workerId: w.id, name: w.name, phone: w.phone, jobId: job.id, message }];
+  });
+}

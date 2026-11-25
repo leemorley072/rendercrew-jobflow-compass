@@ -89,3 +89,50 @@ describe("job costing", () => {
     expect(runway(j, [], 0.25, 500, { spend: 2600 }).direct).toBe(2600);
   });
 });
+
+import { planPivot, safeTargets } from "./team";
+import { middayReminders, todaysJobFor } from "./engine";
+import { STAGES } from "./stages";
+
+describe("team routing", () => {
+  it("a job that takes the whole team always wins over splitting", () => {
+    const d = seedTenantData();
+    const g1 = d.crews.find((c) => c.id === "g1")!;
+    const plan = planPivot(d, g1, { x: 4, y: 26 }, "j1042");
+    expect(plan.mode).toBe("team");
+    if (plan.mode === "team") expect(plan.target.men).toBeGreaterThanOrEqual(3);
+  });
+  it("with only small jobs, the van crew stays together and own-transport workers split off", () => {
+    const d = seedTenantData();
+    d.jobs = d.jobs.filter((j) => j.id === "j1052" || j.id === "j1053" || j.id === "j1042");
+    const g1 = d.crews.find((c) => c.id === "g1")!; // Marcus drives, Callum own transport, Josh needs a lift
+    const plan = planPivot(d, g1, { x: 4, y: 26 }, "j1042");
+    expect(plan.mode).toBe("split");
+    if (plan.mode !== "split") return;
+    const van = plan.assignments[0]!.workerIds;
+    expect(van).toContain("w1");
+    expect(van).toContain("w3");
+    expect(plan.assignments[1]!.workerIds).toEqual(["w2"]);
+  });
+  it("indoor plastering counts as rain-safe work", () => {
+    const d = seedTenantData();
+    expect(safeTargets({ x: 5, y: 22 }, d.jobs).some((t) => t.job.system === "plaster")).toBe(true);
+  });
+});
+
+describe("worker access & reminders", () => {
+  it("a worker only gets the one job they're booked on today", () => {
+    const d = seedTenantData();
+    expect(todaysJobFor(d, "w4")?.id).toBe("j1039");
+    expect(todaysJobFor(d, "w9")?.id).toBe("j1052");
+    expect(todaysJobFor(d, "w7")).toBeUndefined(); // Gang 3 on rain delay
+  });
+  it("midday reminder goes at 12:30 to everyone booked on site", () => {
+    const r = middayReminders(seedTenantData(), "https://x");
+    expect(r.map((x) => x.workerId).sort()).toEqual(["w4", "w5", "w6", "w9"]);
+    expect(r[0]!.message).toContain("12:30");
+  });
+  it("plastering has just before, prep done and finished stages", () => {
+    expect(STAGES.plaster.map((s) => s.name)).toEqual(["Before Photos", "Prep Work Done", "Plastering Finished"]);
+  });
+});

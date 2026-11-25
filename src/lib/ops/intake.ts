@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { freshStages } from "./stages";
-import type { Job, Region, TenantData } from "./types";
+import type { Job, Region, SystemKind, TenantData } from "./types";
 
 const REGION_COORDS: Record<Region, { x: number; y: number }> = {
   Leeds: { x: 0, y: 0 },
@@ -18,7 +18,7 @@ export const ghlWonPayload = z.object({
   contact: z.object({ name: z.string().min(2).max(80), address1: z.string().min(3).max(120), postalCode: z.string().min(2).max(10) }),
   customFields: z.object({
     region: z.enum(["Leeds", "Harrogate", "York"]),
-    system: z.enum(["monocouche", "silicone"]),
+    system: z.enum(["monocouche", "silicone", "ewi", "cork", "plaster"]),
     product: z.string().min(2).max(60),
     elevations: z.array(z.object({ name: z.string().min(1).max(30), area: z.number().positive().max(2000) })).min(1).max(8),
   }),
@@ -58,7 +58,8 @@ export interface NewJobInput {
   postcode: string;
   customer: string;
   region: Region;
-  system: "monocouche" | "silicone";
+  system: SystemKind;
+  menNeeded?: number;
   product: string;
   quoted: number;
   elevations: { name: string; area: number }[];
@@ -93,6 +94,7 @@ export function buildJob(d: TenantData, input: NewJobInput, source: "ghl" | "man
     status: "intake",
     source,
     ...(oppId ? { ghlOpportunityId: oppId } : {}),
+    ...(input.menNeeded ? { menNeeded: input.menNeeded } : {}),
     createdAt: new Date().toISOString().slice(0, 10),
   };
 }

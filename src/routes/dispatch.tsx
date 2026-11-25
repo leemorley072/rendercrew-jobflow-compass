@@ -1,3 +1,4 @@
+import { STAGES, SYSTEM_LABEL } from "@/lib/ops/stages";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { CloudRain, Umbrella } from "lucide-react";
@@ -60,7 +61,7 @@ function Dispatch() {
     if (!j) return true;
     if (region && j.region !== region) return false;
     if (sys === "Silicone") return j.system === "silicone" && !j.product.includes("EWI");
-    if (sys === "EWI") return j.product.includes("EWI");
+    if (sys === "EWI") return j.system === "ewi" || j.product.includes("EWI");
     if (sys === "Monocouche") return j.system === "monocouche";
     return true;
   };
@@ -79,7 +80,7 @@ function Dispatch() {
       j.menOnSite = choice.crew.men;
       d.bookings.push({
         id: `b${Date.now()}`, crewId: choice.crew.id, start, len: choice.len, kind: "new",
-        label: `NEW · ${pending.address.replace(/^The /, "")} Start`, jobId: pending.id, stageCode: pending.system === "silicone" ? "S1" : "M1",
+        label: `NEW · ${pending.address.replace(/^The /, "")} Start`, jobId: pending.id, stageCode: STAGES[pending.system][0]!.code,
       });
     });
     setCrewPick(null);
@@ -139,7 +140,7 @@ function Dispatch() {
           <div className="py-5 min-w-[300px] flex-1">
             <p className="text-[11px] font-extrabold uppercase tracking-widest text-ink/60">Pending job · {pending.source === "ghl" ? "GHL" : "Manual"}{intake.length > 1 && ` · 1 of ${intake.length}`}</p>
             <h2 className="mt-1 font-display text-[20px]">{pending.address}</h2>
-            <p className="text-[14px] font-extrabold">{jobArea(pending)}m² {pending.system === "silicone" ? "Silicone" : "Monocouche"} • {pending.region} ({pending.postcode.split(" ")[0]})</p>
+            <p className="text-[14px] font-extrabold">{jobArea(pending)}m² {SYSTEM_LABEL[pending.system]} • {pending.region} ({pending.postcode.split(" ")[0]})</p>
           </div>
           <span className="w-0.5 h-16 bg-ink" />
           <div className="font-display text-[40px]">{choice.score}%</div>
@@ -155,7 +156,7 @@ function Dispatch() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <p className="text-[13px] font-bold text-ink/60">{choice.crew.men} Plasterers • {choice.crew.certs} • {choice.minutes}-min drive{choice.start !== undefined ? ` • from ${DAY_LABELS[choice.start]}` : " • no free slot"}</p>
+            <p className="text-[13px] font-bold text-ink/60">{choice.crew.men} {choice.crew.men === 1 ? "Worker" : "Men"} • {choice.crew.certs} • {choice.minutes}-min drive{choice.start !== undefined ? ` • from ${DAY_LABELS[choice.start]}` : " • no free slot"}</p>
           </div>
           <button onClick={confirm} className="h-16 px-6 rounded-full bg-safety border border-line text-[17px] font-extrabold hard">
             Confirm & Dispatch {choice.crew.name.split(" · ")[0]} →

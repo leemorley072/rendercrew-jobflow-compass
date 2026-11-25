@@ -1,4 +1,4 @@
-export type SystemKind = "monocouche" | "silicone";
+export type SystemKind = "monocouche" | "silicone" | "ewi" | "cork" | "plaster";
 export type Region = "Leeds" | "Harrogate" | "York";
 export type StageStatus = "verified" | "upload" | "locked";
 export type Review = "pending" | "approved" | "rejected";
@@ -61,6 +61,8 @@ export interface Job {
   warrantyExported?: boolean;
   reviewRequested?: boolean;
   topcoatStopped?: boolean;
+  /** How many men the work actually needs (e.g. 1 for a single-room skim). */
+  menNeeded?: number;
 }
 
 export interface VariationItem {
@@ -98,6 +100,32 @@ export interface Crew {
   dayRate: number;
   base: { x: number; y: number };
   phone: string;
+  /** Individual workers in this team; when set, men/day rate/skills come from them. */
+  memberIds?: string[];
+  /** Team lead who drives the van — the team travels with them. */
+  driverId?: string;
+}
+
+export interface Worker {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  postcode: string;
+  dayRate: number;
+  skills: SystemKind[];
+  /** Can get to a different site on their own (not tied to the team van). */
+  ownTransport: boolean;
+  base: { x: number; y: number };
+}
+
+export interface ReminderLog {
+  id: string;
+  at: string;
+  workerId: string;
+  phone: string;
+  message: string;
+  status: "queued" | "sent" | "failed";
 }
 
 export type BookingKind = "work" | "hold" | "gap" | "depot" | "new";
@@ -136,6 +164,8 @@ export interface TenantData {
   rainOverrides: number[];
   webhookLog: WebhookLog[];
   materialOverrides?: MaterialOverrides;
+  workers?: Worker[];
+  reminderLog?: ReminderLog[];
 }
 
 export interface MaterialItem {
@@ -166,4 +196,6 @@ export interface OpsState {
   tenants: Tenant[];
   data: Record<string, TenantData>;
   agencyMaterials: MaterialItem[];
+  /** Which worker is signed in on the site view (testing stand-in for login). */
+  activeWorkerId?: string;
 }

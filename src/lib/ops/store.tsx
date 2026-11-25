@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { seedState } from "./seed";
+import { seedState, seedTenantData } from "./seed";
 import { DEFAULT_MATERIALS, resolveCatalog } from "./costing";
 import type { MaterialItem, OpsState, Tenant, TenantData } from "./types";
 
@@ -29,6 +29,23 @@ export function OpsProvider({ children }: { children: ReactNode }) {
       if (raw) {
         const s = JSON.parse(raw) as OpsState;
         if (!s.agencyMaterials) s.agencyMaterials = structuredClone(DEFAULT_MATERIALS);
+        // Bring in new price-book items (EWI, cork, plastering) added since this browser last saved.
+        for (const m of DEFAULT_MATERIALS) if (!s.agencyMaterials.some((x) => x.id === m.id)) s.agencyMaterials.push(structuredClone(m));
+        const fresh = seedTenantData();
+        for (const [id, d] of Object.entries(s.data)) {
+          if (d.workers) continue;
+          if (id === "t1") {
+            d.workers = fresh.workers ?? [];
+            for (const c of fresh.crews) {
+              const old = d.crews.find((x) => x.id === c.id);
+              if (old) Object.assign(old, { memberIds: c.memberIds, driverId: c.driverId });
+              else d.crews.push(c);
+            }
+            for (const j of fresh.jobs) if (!d.jobs.some((x) => x.id === j.id)) d.jobs.push(j);
+            for (const b of fresh.bookings) if (!d.bookings.some((x) => x.id === b.id)) d.bookings.push(b);
+            s.activeWorkerId ??= "w4";
+          } else d.workers = [];
+        }
         setState(s);
       }
     } catch {

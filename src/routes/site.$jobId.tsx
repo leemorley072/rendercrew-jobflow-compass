@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { MobileFrame, MobileHeader, MobileTabs, type MobileTab } from "@/components/ops/chrome";
 import { RunwayGauge } from "@/components/ops/RunwayGauge";
 import { nowLabel, readPhoto, useOps } from "@/lib/ops/store";
-import { coatingSafe, gbp, jobComplete, scaffoldLeft, TODAY, weatherFor } from "@/lib/ops/engine";
+import { todaysJobFor, coatingSafe, gbp, jobComplete, scaffoldLeft, TODAY, weatherFor } from "@/lib/ops/engine";
 import { bagsUsed, closeOutShift, itemsForJob, runwayFor, scaffoldNeeded } from "@/lib/ops/costing";
 import { currentStage, elevationDone, stageDef, verifyStage } from "@/lib/ops/stages";
 import { cn } from "@/lib/utils";
@@ -29,8 +29,11 @@ export const Route = createFileRoute("/site/$jobId")({
 function JobCard() {
   const { jobId } = Route.useParams();
   const { tab = "job" } = Route.useSearch();
-  const { data, tenant, catalog, mutateData } = useOps();
-  const job = data.jobs.find((j) => j.id === jobId);
+  const { data, tenant, catalog, mutateData, state } = useOps();
+  const found = data.jobs.find((j) => j.id === jobId);
+  // Workers can only open the one job they're on today — no updating the wrong site.
+  const locked = state.role === "lead" && found && todaysJobFor(data, state.activeWorkerId ?? "")?.id !== found.id;
+  const job = locked ? undefined : found;
   const [elName, setElName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [batch, setBatch] = useState("");
@@ -40,7 +43,8 @@ function JobCard() {
   if (!job)
     return (
       <MobileFrame>
-        <MobileHeader title="Job not found" region={tenant.homeRegion} />
+        <MobileHeader title={locked ? "Not your site today" : "Job not found"} region={tenant.homeRegion} />
+        {locked && <p className="px-4 pb-4 text-[14px] font-bold text-ink/70">You can only update the job you're booked on today. Ask the office if you've been moved.</p>}
         <div className="px-4"><Link to="/site" className="h-14 rounded-full bg-white border border-line font-extrabold grid place-items-center">Back to my sites</Link></div>
       </MobileFrame>
     );

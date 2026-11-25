@@ -1,3 +1,4 @@
+import { SYSTEM_LABEL } from "@/lib/ops/stages";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Printer } from "lucide-react";
 import { useOps } from "@/lib/ops/store";
@@ -21,7 +22,7 @@ function Certificate() {
   const { data, tenant, mutateData } = useOps();
   const job = data.jobs.find((j) => j.id === jobId);
   if (!job) return <div className="p-10 font-extrabold">Job not found. <Link to="/" className="underline">Dashboard</Link></div>;
-  const total = job.elevations.length * 6;
+  const total = job.elevations.reduce((n, e) => n + e.stages.length, 0);
   const done = job.elevations.reduce((s, e) => s + e.stages.filter((x) => x.status === "verified").length, 0);
   const ready = job.status === "complete";
   const years = job.system === "silicone" ? 10 : 12;
@@ -55,7 +56,7 @@ function Certificate() {
           <dl className="mt-5 grid grid-cols-2 gap-x-8 gap-y-2 text-[14px]">
             <dt className="font-extrabold">Property</dt><dd>{job.address}, {job.postcode}</dd>
             <dt className="font-extrabold">Homeowner</dt><dd>{job.customer}</dd>
-            <dt className="font-extrabold">System</dt><dd>{job.product} ({job.system === "silicone" ? "Silicone thin-coat" : "Monocouche scratch render"})</dd>
+            <dt className="font-extrabold">System</dt><dd>{job.product} ({SYSTEM_LABEL[job.system]})</dd>
             <dt className="font-extrabold">Area</dt><dd>{jobArea(job)}m² across {job.elevations.length} elevations</dd>
             <dt className="font-extrabold">Completed</dt><dd>{job.completedAt}</dd>
             <dt className="font-extrabold">Reference</dt><dd>{job.ref}</dd>

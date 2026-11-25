@@ -106,6 +106,7 @@ export function DesktopHeader({ title, subtitle }: { title: string; subtitle: st
 const TABS = [
   { to: "/", label: "Sites" },
   { to: "/dispatch", label: "Dispatch" },
+  { to: "/team", label: "Team" },
   { to: "/ghl", label: "GHL Leads" },
   { to: "/site", label: "Site View" },
 ] as const;

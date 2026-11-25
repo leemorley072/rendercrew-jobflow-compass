@@ -17,10 +17,47 @@ export const STAGES: Record<SystemKind, StageDef[]> = {
     { code: "S5", name: "Silicone Topcoat (one-run float, batch logging)", short: "Topcoat", weatherSensitive: true, prep: false },
     { code: "S6", name: "Perimeter Seals & Clean Down", short: "Seals", weatherSensitive: false, prep: false },
   ],
+  ewi: [
+    { code: "E1", name: "Insulation Board Fixing & Adhesive", short: "Boarding", weatherSensitive: false, prep: true },
+    { code: "E2", name: "Mechanical Dowel Pinning (8 per m²)", short: "Dowels", weatherSensitive: false, prep: true },
+    { code: "E3", name: "Basecoat & Mesh Embed", short: "Basecoat", weatherSensitive: true, prep: false },
+    { code: "E4", name: "Primer & Finish Coat", short: "Finish", weatherSensitive: true, prep: false },
+    { code: "E5", name: "Seals, Trims & Clean Down", short: "Seals", weatherSensitive: false, prep: false },
+  ],
+  cork: [
+    { code: "C1", name: "Primer & Masking", short: "Primer", weatherSensitive: false, prep: true },
+    { code: "C2", name: "1st Spray Cork Pass", short: "1st Spray", weatherSensitive: true, prep: false },
+    { code: "C3", name: "2nd Spray & Texture Finish", short: "Finish", weatherSensitive: true, prep: false },
+  ],
+  plaster: [
+    { code: "P1", name: "Before Photos", short: "Before", weatherSensitive: false, prep: true },
+    { code: "P2", name: "Prep Work Done", short: "Prep", weatherSensitive: false, prep: true },
+    { code: "P3", name: "Plastering Finished", short: "Finished", weatherSensitive: false, prep: false },
+  ],
 };
 
+export const SYSTEM_LABEL: Record<SystemKind, string> = {
+  silicone: "Silicone Render",
+  monocouche: "Monocouche Render",
+  ewi: "External Wall Insulation",
+  cork: "Sprayed Cork",
+  plaster: "Internal Plastering",
+};
+export const SYSTEMS = Object.keys(SYSTEM_LABEL) as SystemKind[];
+export const DEFAULT_PRODUCT: Record<SystemKind, string> = {
+  silicone: "Weber Silicone",
+  monocouche: "K-Rend Monocouche",
+  ewi: "Parex EWI",
+  cork: "CorkSol",
+  plaster: "Multi-Finish Skim",
+};
+/** Indoor work a rained-off team can safely be sent to. */
+export const INDOOR: Record<SystemKind, boolean> = { silicone: false, monocouche: false, ewi: false, cork: false, plaster: true };
+/** Typical headcount when the office doesn't set one. */
+export const DEFAULT_MEN: Record<SystemKind, number> = { silicone: 3, monocouche: 3, ewi: 3, cork: 2, plaster: 1 };
+
 export function stageDef(code: string): StageDef {
-  const all = [...STAGES.monocouche, ...STAGES.silicone];
+  const all = Object.values(STAGES).flat();
   return all.find((s) => s.code === code) ?? all[0]!;
 }
 
