@@ -16,7 +16,7 @@ export function SignaturePad({ onChange, signer, disabled }: { onChange: (data: 
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.strokeStyle = "#0d0d0d";
+    ctx.strokeStyle = "#101319";
   }, []);
 
   const pos = (e: React.PointerEvent) => {
