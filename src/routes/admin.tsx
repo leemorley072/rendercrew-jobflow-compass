@@ -1,13 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, DesktopHeader, SectionTitle } from "@/components/ops/chrome";
 import { fieldCls, labelCls } from "@/components/ops/NewJobDialog";
 import { useOps } from "@/lib/ops/store";
 import { emptyTenantData } from "@/lib/ops/seed";
 import { gbp } from "@/lib/ops/engine";
-import type { Region } from "@/lib/ops/types";
+import type { MaterialItem, Region } from "@/lib/ops/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({
@@ -127,8 +127,72 @@ function Admin() {
               <button className="h-12 px-5 rounded-full bg-safety border border-line font-extrabold">Add Gang</button>
             </form>
           </Card>
+
+          <PriceBook tenantId={t.id} tenantName={t.name} />
         </div>
       </main>
     </div>
+  );
+}
+
+function PriceBook({ tenantId, tenantName }: { tenantId: string; tenantName: string }) {
+  const { state, mutate } = useOps();
+  const overrides = state.data[tenantId]!.materialOverrides ?? {};
+  const [nf, setNf] = useState({ name: "", unit: "bag", supplier: "", price: "", system: "all" as MaterialItem["system"] });
+
+  const setAgency = (id: string, fn: (m: MaterialItem) => void) => mutate((s) => fn(s.agencyMaterials.find((m) => m.id === id)!));
+  const setOverride = (id: string, patch: Partial<{ supplier: string; price: number }>) =>
+    mutate((s) => {
+      const dd = s.data[tenantId]!;
+      const base = s.agencyMaterials.find((m) => m.id === id)!;
+      const cur = dd.materialOverrides?.[id] ?? { supplier: base.supplier, price: base.price };
+      dd.materialOverrides = { ...(dd.materialOverrides ?? {}), [id]: { ...cur, ...patch } };
+    });
+  const clearOverride = (id: string) => mutate((s) => { const dd = s.data[tenantId]!; if (dd.materialOverrides) delete dd.materialOverrides[id]; });
+
+  const add = (e: React.FormEvent) => {
+    e.preventDefault();
+    const price = Number(nf.price);
+    if (!nf.name.trim() || !(price > 0)) { toast.error("Add the item name and a unit price."); return; }
+    mutate((s) => { s.agencyMaterials.push({ id: `m${Date.now().toString(36)}`, name: nf.name.trim(), unit: nf.unit.trim() || "unit", supplier: nf.supplier.trim() || "—", price, system: nf.system }); });
+    setNf({ ...nf, name: "", supplier: "", price: "" });
+    toast.success("Added to every contractor's price book");
+  };
+
+  return (
+    <>
+      <SectionTitle meta={`${state.agencyMaterials.length} items`}>Material price book</SectionTitle>
+      <p className="text-[13px] font-bold text-ink/60 -mt-3">Agency prices are the benchmark every contractor starts with. Set {tenantName}'s own supplier and price to override.</p>
+      <Card className="overflow-hidden">
+        <div className="grid grid-cols-[1.6fr_70px_1fr_90px_1fr_90px_44px] gap-2 px-4 py-2 border-b-2 border-line text-[11px] font-extrabold uppercase tracking-widest text-ink/60">
+          <span>Item</span><span>Unit</span><span>Agency supplier</span><span>Agency £</span><span>Their supplier</span><span>Their £</span><span />
+        </div>
+        {state.agencyMaterials.map((m) => {
+          const o = overrides[m.id];
+          return (
+            <div key={m.id} className="grid grid-cols-[1.6fr_70px_1fr_90px_1fr_90px_44px] gap-2 items-center px-4 py-2 border-b border-line">
+              <div><p className="text-[14px] font-extrabold leading-5">{m.name}</p><p className="text-[11px] font-bold text-ink/50 uppercase">{m.system === "all" ? "All systems" : m.system}</p></div>
+              <span className="text-[13px] font-bold">{m.unit}</span>
+              <input aria-label={`Agency supplier for ${m.name}`} className={fieldCls + " h-10"} value={m.supplier} onChange={(e) => setAgency(m.id, (x) => { x.supplier = e.target.value; })} />
+              <input aria-label={`Agency price for ${m.name}`} className={fieldCls + " h-10"} inputMode="decimal" value={m.price} onChange={(e) => setAgency(m.id, (x) => { x.price = Number(e.target.value) || 0; })} />
+              <input aria-label={`${tenantName} supplier for ${m.name}`} className={cn(fieldCls, "h-10", !o && "text-ink/40")} value={o?.supplier ?? m.supplier} onChange={(e) => setOverride(m.id, { supplier: e.target.value })} />
+              <input aria-label={`${tenantName} price for ${m.name}`} className={cn(fieldCls, "h-10", !o && "text-ink/40")} inputMode="decimal" value={o?.price ?? m.price} onChange={(e) => setOverride(m.id, { price: Number(e.target.value) || 0 })} />
+              {o ? <button aria-label={`Use agency price for ${m.name}`} title="Use agency price" onClick={() => clearOverride(m.id)} className="w-10 h-10 rounded-full border border-line grid place-items-center"><RotateCcw className="w-4 h-4" /></button> : <span />}
+            </div>
+          );
+        })}
+        <form onSubmit={add} className="grid grid-cols-[1.6fr_80px_1fr_90px_130px_auto] gap-3 items-end p-4 bg-stone/40">
+          <label><span className={labelCls}>New item</span><input className={fieldCls} value={nf.name} onChange={(e) => setNf({ ...nf, name: e.target.value })} placeholder="Primer 5L" /></label>
+          <label><span className={labelCls}>Unit</span><input className={fieldCls} value={nf.unit} onChange={(e) => setNf({ ...nf, unit: e.target.value })} /></label>
+          <label><span className={labelCls}>Supplier</span><input className={fieldCls} value={nf.supplier} onChange={(e) => setNf({ ...nf, supplier: e.target.value })} /></label>
+          <label><span className={labelCls}>Price £</span><input className={fieldCls} inputMode="decimal" value={nf.price} onChange={(e) => setNf({ ...nf, price: e.target.value })} /></label>
+          <label><span className={labelCls}>System</span>
+            <select className={fieldCls} value={nf.system} onChange={(e) => setNf({ ...nf, system: e.target.value as MaterialItem["system"] })}>
+              <option value="all">All</option><option value="silicone">Silicone</option><option value="monocouche">Monocouche</option>
+            </select></label>
+          <button className="h-12 px-5 rounded-full bg-safety border border-line font-extrabold">Add Item</button>
+        </form>
+      </Card>
+    </>
   );
 }

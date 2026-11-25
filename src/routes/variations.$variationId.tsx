@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { MobileFrame, MobileHeader } from "@/components/ops/chrome";
 import { SignaturePad } from "@/components/ops/SignaturePad";
 import { useOps } from "@/lib/ops/store";
-import { gbp, labourRunway } from "@/lib/ops/engine";
+import { gbp } from "@/lib/ops/engine";
+import { runwayFor } from "@/lib/ops/costing";
 
 export const Route = createFileRoute("/variations/$variationId")({
   head: () => ({
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/variations/$variationId")({
 
 function VariationSign() {
   const { variationId } = Route.useParams();
-  const { data, tenant, mutateData } = useOps();
+  const { data, tenant, catalog, mutateData } = useOps();
   const v = data.variations.find((x) => x.id === variationId);
   const job = data.jobs.find((j) => j.id === v?.jobId);
   const [sig, setSig] = useState<string | null>(null);
@@ -39,7 +40,7 @@ function VariationSign() {
   const dayRate = crew?.dayRate ?? tenant.defaultDayRate;
   const signedBefore = data.variations.filter((x) => x.jobId === job.id && x.status === "signed" && x.id !== v.id).reduce((s, x) => s + x.cost, 0);
   const before = job.quoted + signedBefore;
-  const runway = labourRunway(job, data.variations, tenant.gpFloor, dayRate);
+  const runway = runwayFor(job, data, tenant, catalog);
   const signed = v.status === "signed";
 
   const sign = () => {

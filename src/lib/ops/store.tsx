@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { seedState } from "./seed";
-import type { OpsState, Tenant, TenantData } from "./types";
+import { DEFAULT_MATERIALS, resolveCatalog } from "./costing";
+import type { MaterialItem, OpsState, Tenant, TenantData } from "./types";
 
 const KEY = "renderfuel-ops-v1";
 
@@ -9,6 +10,8 @@ interface Ctx {
   state: OpsState;
   tenant: Tenant;
   data: TenantData;
+  /** Active contractor's price book: agency benchmark with their own prices on top. */
+  catalog: MaterialItem[];
   mutate: (fn: (s: OpsState) => void) => void;
   mutateData: (fn: (d: TenantData, t: Tenant) => void) => void;
   reset: () => void;
@@ -23,7 +26,11 @@ export function OpsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setState(JSON.parse(raw) as OpsState);
+      if (raw) {
+        const s = JSON.parse(raw) as OpsState;
+        if (!s.agencyMaterials) s.agencyMaterials = structuredClone(DEFAULT_MATERIALS);
+        setState(s);
+      }
     } catch {
       /* corrupt store: keep seed */
     }
@@ -60,7 +67,8 @@ export function OpsProvider({ children }: { children: ReactNode }) {
 
   const tenant = state.tenants.find((t) => t.id === state.activeTenantId) ?? state.tenants[0]!;
   const data = state.data[tenant.id]!;
-  return <OpsContext.Provider value={{ state, tenant, data, mutate, mutateData, reset }}>{children}</OpsContext.Provider>;
+  const catalog = resolveCatalog(state.agencyMaterials, data.materialOverrides);
+  return <OpsContext.Provider value={{ state, tenant, data, catalog, mutate, mutateData, reset }}>{children}</OpsContext.Provider>;
 }
 
 export function useOps() {

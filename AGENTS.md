@@ -32,3 +32,5 @@ use the editor.
 ## Project rules
 - App data lives in a client store (`src/lib/ops/store.tsx`, persisted to localStorage, keyed per contractor tenant) — no backend yet; move to Lovable Cloud before going multi-device.
 - Business rules (runway, rain pivot, crew ranking, stage gates, GHL payload checks) are pure functions in `src/lib/ops/*` with tests in `engine.test.ts`; pages only call them.
+- Material prices: agency price book (`OpsState.agencyMaterials`) is the benchmark; each tenant's `materialOverrides` win via `resolveCatalog` — so new contractors cost jobs from day one yet keep their own trade discounts.
+- Labour is costed per man-day (crew day rate ÷ crew size × men on site at close-out), and jobs with `scaffold.required === false` carry no scaffold cost or countdown — solo and ground-level work must not burn full-gang or scaffold budget.

@@ -4,6 +4,7 @@ import feedScratch from "@/assets/feed-scratch.jpg";
 import brick1 from "@/assets/defect-brick-1.jpg";
 import brick2 from "@/assets/defect-brick-2.jpg";
 import { freshStages } from "./stages";
+import { DEFAULT_MATERIALS } from "./costing";
 import type { DayWeather, Job, OpsState, Region, TenantData } from "./types";
 
 const dry = (temp = 14): DayWeather => ({ rain: 10, temp });
@@ -174,6 +175,7 @@ export function seedTenantData(): TenantData {
     forecast: forecast(),
     rainOverrides: [],
     webhookLog: [],
+    materialOverrides: { basecoat: { supplier: "Minster Leeds", price: 10.5 }, topcoat: { supplier: "Encon Leeds", price: 62 } },
   };
 }
 
@@ -190,5 +192,6 @@ export function seedState(): OpsState {
       { id: "t2", name: "Pennine Facades", ghlLocationId: "Kd82LmQx0PzR4tYw1Nc7", homeRegion: "Harrogate", gpFloor: 0.28, defaultDayRate: 600, createdAt: "2026-09-12" },
     ],
     data: { t1: seedTenantData(), t2: emptyTenantData() },
+    agencyMaterials: structuredClone(DEFAULT_MATERIALS),
   };
 }

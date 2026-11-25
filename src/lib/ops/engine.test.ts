@@ -58,3 +58,34 @@ describe("stage gates", () => {
     expect(el.stages[2]!.status).toBe("locked");
   });
 });
+
+import { closeOutShift, labourRunway as runway, materialSpend, resolveCatalog, DEFAULT_MATERIALS } from "./costing";
+
+describe("job costing", () => {
+  it("contractor price overrides the agency benchmark", () => {
+    const cat = resolveCatalog(DEFAULT_MATERIALS, { basecoat: { supplier: "Minster Leeds", price: 10.5 } });
+    expect(cat.find((m) => m.id === "basecoat")!.price).toBe(10.5);
+    expect(cat.find((m) => m.id === "topcoat")!.price).toBe(68);
+  });
+  it("material spend = Σ quantity × unit price", () => {
+    const j = job({ usage: { basecoat: 10, topcoat: 2, mesh: 1 } });
+    expect(materialSpend(j, DEFAULT_MATERIALS)).toBeCloseTo(10 * 11.5 + 2 * 68 + 42);
+  });
+  it("one plasterer on site costs one man-day, not a full gang day", () => {
+    const j = job({ daysWorked: 0, manDays: 0, menOnSite: 1 });
+    closeOutShift(j, 3);
+    const r = runway(j, [], 0.25, 570, { men: 3 });
+    expect(r.labourSpent).toBe(190);
+  });
+  it("no-scaffold jobs skip scaffold cost and scaffold days", () => {
+    const j = job({ scaffoldCost: 1200, scaffold: { hireDays: 0, daysUsed: 0, weeklyFee: 180, required: false }, menOnSite: 2 });
+    closeOutShift(j, 3);
+    expect(j.scaffold.daysUsed).toBe(0);
+    expect(runway(j, [], 0.25, 570, { men: 3 }).scaffold).toBe(0);
+  });
+  it("logged materials over the allowance eat into the runway", () => {
+    const j = job({ quoted: 10000, materialCost: 2000, scaffoldCost: 0, scaffold: { hireDays: 0, daysUsed: 0, weeklyFee: 0, required: false }, daysWorked: 0, manDays: 0 });
+    expect(runway(j, [], 0.25, 500, { spend: 1500 }).direct).toBe(2000);
+    expect(runway(j, [], 0.25, 500, { spend: 2600 }).direct).toBe(2600);
+  });
+});

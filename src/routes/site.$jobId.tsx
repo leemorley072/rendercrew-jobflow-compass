@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { MobileFrame, MobileHeader, MobileTabs, type MobileTab } from "@/components/ops/chrome";
 import { RunwayGauge } from "@/components/ops/RunwayGauge";
 import { nowLabel, readPhoto, useOps } from "@/lib/ops/store";
-import { coatingSafe, gbp, jobComplete, labourRunway, scaffoldLeft, TODAY, weatherFor } from "@/lib/ops/engine";
+import { coatingSafe, gbp, jobComplete, scaffoldLeft, TODAY, weatherFor } from "@/lib/ops/engine";
+import { bagsUsed, closeOutShift, itemsForJob, runwayFor, scaffoldNeeded } from "@/lib/ops/costing";
 import { currentStage, elevationDone, stageDef, verifyStage } from "@/lib/ops/stages";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/site/$jobId")({
 function JobCard() {
   const { jobId } = Route.useParams();
   const { tab = "job" } = Route.useSearch();
-  const { data, tenant, mutateData } = useOps();
+  const { data, tenant, catalog, mutateData } = useOps();
   const job = data.jobs.find((j) => j.id === jobId);
   const [elName, setElName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -48,9 +49,12 @@ function JobCard() {
   const cur = currentStage(el);
   const pendingVar = data.variations.find((v) => v.jobId === job.id && v.elevation === el.name && v.status === "pending");
   const left = scaffoldLeft(job);
-  const pct = Math.min(100, (job.scaffold.daysUsed / job.scaffold.hireDays) * 100);
+  const pct = job.scaffold.hireDays ? Math.min(100, (job.scaffold.daysUsed / job.scaffold.hireDays) * 100) : 0;
   const crew = data.crews.find((c) => c.id === job.crewId);
-  const runway = labourRunway(job, data.variations, tenant.gpFloor, crew?.dayRate ?? tenant.defaultDayRate);
+  const runway = runwayFor(job, data, tenant, catalog);
+  const hasScaffold = scaffoldNeeded(job);
+  const stock = itemsForJob(catalog, job);
+  const bags = job.usage ? bagsUsed(job, catalog) : job.bags;
   const wet = !coatingSafe(weatherFor(data, job.region, TODAY));
 
   const pick = (code: string) => {
@@ -104,7 +108,7 @@ function JobCard() {
       <div className="px-4 pb-48 space-y-4">
         {tab === "job" && (
           <>
-            <section className="bg-white border border-line rounded-[18px] p-4 hard">
+            {hasScaffold && <section className="bg-white border border-line rounded-[18px] p-4 hard">
               <div className="flex justify-between items-baseline">
                 <span className="text-[14px] font-extrabold uppercase">Scaffold hire</span>
                 <span className="font-display text-[20px]">{job.scaffold.daysUsed}/{job.scaffold.hireDays} days</span>
@@ -115,7 +119,7 @@ function JobCard() {
               <p className={cn("mt-2 text-[15px] font-semibold", left <= 0 && "text-safety font-extrabold")}>
                 {left > 0 ? <>{left} days until <b className="font-extrabold">{gbp(job.scaffold.weeklyFee)}/wk</b> fee</> : <>Overrun · {gbp(job.scaffold.weeklyFee)}/wk now charging</>}
               </p>
-            </section>
+            </section>}
 
             <div className="bg-white border border-line rounded-full p-1.5 grid h-14" style={{ gridTemplateColumns: `repeat(${job.elevations.length}, 1fr)` }}>
               {job.elevations.map((e) => (
@@ -181,7 +185,7 @@ function JobCard() {
 
             <section className="bg-white border border-line rounded-[18px] grid grid-cols-2">
               <div className="p-4 border-r-2 border-line"><p className="font-display text-[30px] leading-none">{job.menOnSite}</p><p className="mt-1 text-[14px] font-extrabold uppercase">Men on site</p></div>
-              <div className="p-4"><p className="font-display text-[30px] leading-none">{job.bags}</p><p className="mt-1 text-[14px] font-extrabold uppercase">Bags applied</p></div>
+              <div className="p-4"><p className="font-display text-[30px] leading-none">{bags}</p><p className="mt-1 text-[14px] font-extrabold uppercase">Bags applied</p></div>
             </section>
 
             <Link to="/variations/new/$jobId" params={{ jobId: job.id }} search={{ elevation: el.name }} className="w-full h-14 rounded-full bg-white border border-line text-[16px] font-extrabold flex items-center justify-center gap-2">
@@ -227,21 +231,41 @@ function JobCard() {
               <RunwayGauge r={runway} compact />
             </section>
             <button
-              onClick={() => { update((j) => { j.daysWorked += 1; j.scaffold.daysUsed += 1; }); toast.success(`Day logged — ${(runway.remaining - 1).toFixed(1)} crew-days left on budget`); }}
+              onClick={() => {
+                if (job.menOnSite < 1) { toast.error("Set how many men were on site today first."); return; }
+                const men = job.menOnSite;
+                update((j) => closeOutShift(j, crew?.men ?? 3));
+                const cost = men * runway.perMan;
+                toast.success(`Shift logged — ${men} man-day${men > 1 ? "s" : ""} (${gbp(cost)}) · ${(runway.remaining - cost / (crew?.dayRate ?? tenant.defaultDayRate)).toFixed(1)} crew-days left`);
+              }}
               className="w-full h-16 rounded-full bg-safety border border-line text-[17px] font-extrabold hard">
               Close Out Today's Shift
             </button>
-            <p className="text-[13px] font-bold text-ink/70 text-center">Logs one crew-day and one scaffold day for {job.address}.</p>
+            <p className="text-[13px] font-bold text-ink/70 text-center">Logs {job.menOnSite} man-day{job.menOnSite === 1 ? "" : "s"} at {gbp(runway.perMan)} each{hasScaffold ? " and one scaffold day" : ""} for {job.address}.</p>
           </>
         )}
 
         {tab === "stock" && (
           <>
             <section className="bg-white border border-line rounded-[18px] p-4 hard">
-              <div className="flex items-center justify-between">
-                <div><p className="font-display text-[30px] leading-none">{job.bags}</p><p className="text-[14px] font-extrabold uppercase">Bags applied</p></div>
-                <Stepper value={job.bags} onChange={(v) => update((j) => { j.bags = Math.max(0, v); })} />
+              <div className="flex justify-between items-baseline">
+                <p className="text-[13px] font-extrabold uppercase tracking-widest">Materials used</p>
+                <span className={cn("font-display text-[20px]", runway.materialSpend > runway.materialAllowance && "text-safety")}>{gbp(runway.materialSpend)}</span>
               </div>
+              <p className="text-[13px] font-bold text-ink/70">
+                {runway.materialSpend > runway.materialAllowance ? `${gbp(runway.materialSpend - runway.materialAllowance)} over the ${gbp(runway.materialAllowance)} allowance` : `${gbp(runway.materialAllowance - runway.materialSpend)} left of ${gbp(runway.materialAllowance)} allowance`}
+              </p>
+              <ul className="mt-2 divide-y divide-line">
+                {stock.map((m) => {
+                  const q = job.usage?.[m.id] ?? 0;
+                  return (
+                    <li key={m.id} className="py-3 flex items-center justify-between gap-2">
+                      <div className="min-w-0"><p className="text-[15px] font-extrabold leading-5">{m.name}</p><p className="text-[12px] font-bold text-ink/60">{gbp(m.price, 2)}/{m.unit} · {m.supplier}{q > 0 ? ` · ${gbp(q * m.price, 2)}` : ""}</p></div>
+                      <Stepper value={q} onChange={(v) => update((j) => { j.usage = { ...(j.usage ?? {}), [m.id]: Math.max(0, v) }; j.bags = bagsUsed(j, catalog); })} />
+                    </li>
+                  );
+                })}
+              </ul>
             </section>
             <section className="bg-white border border-line rounded-[18px] p-4 hard">
               <p className="text-[13px] font-extrabold uppercase tracking-widest">Topcoat batch log</p>

@@ -36,7 +36,7 @@ function SiteList() {
               <span className="font-display text-[17px] shrink-0">{jobArea(j)}m²</span>
             </div>
             <p className="mt-1 text-[14px] font-extrabold">{j.ref} · {j.product}</p>
-            <p className="text-[13px] font-bold text-ink/70">{stageLabel(j)} · scaffold {scaffoldLeft(j)}d left</p>
+            <p className="text-[13px] font-bold text-ink/70">{stageLabel(j)} · {j.scaffold.required === false ? "no scaffold" : `scaffold ${scaffoldLeft(j)}d left`}</p>
           </Link>
         ))}
       </div>

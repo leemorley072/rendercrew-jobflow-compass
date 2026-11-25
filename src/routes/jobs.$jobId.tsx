@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { Card, DesktopShell, SectionTitle } from "@/components/ops/chrome";
 import { RunwayGauge } from "@/components/ops/RunwayGauge";
 import { useOps } from "@/lib/ops/store";
-import { gbp, jobArea, labourRunway, scaffoldLeft } from "@/lib/ops/engine";
+import { gbp, jobArea, scaffoldLeft } from "@/lib/ops/engine";
+import { itemsForJob, runwayFor, scaffoldNeeded } from "@/lib/ops/costing";
 import { stageDef } from "@/lib/ops/stages";
 import { stageLabel } from "@/lib/ops/labels";
 import { cn } from "@/lib/utils";
@@ -23,12 +24,13 @@ export const Route = createFileRoute("/jobs/$jobId")({
 
 function JobDetail() {
   const { jobId } = Route.useParams();
-  const { data, tenant, mutateData } = useOps();
+  const { data, tenant, catalog, mutateData } = useOps();
   const job = data.jobs.find((j) => j.id === jobId);
   if (!job)
     return <DesktopShell title="Job not found" subtitle="It may belong to another account"><Link to="/" className="underline font-extrabold">Back to dashboard</Link></DesktopShell>;
   const crew = data.crews.find((c) => c.id === job.crewId);
-  const r = labourRunway(job, data.variations, tenant.gpFloor, crew?.dayRate ?? tenant.defaultDayRate);
+  const r = runwayFor(job, data, tenant, catalog);
+  const items = itemsForJob(catalog, job);
   const vars = data.variations.filter((v) => v.jobId === job.id);
   const left = scaffoldLeft(job);
 
@@ -59,10 +61,29 @@ function JobDetail() {
         <aside className="space-y-5">
           <Card className="p-4"><RunwayGauge r={r} /></Card>
           <Card className="p-4">
-            <div className="flex justify-between items-baseline"><span className="text-[13px] font-extrabold uppercase tracking-widest">Scaffold hire</span><span className="font-display text-[20px]">{job.scaffold.daysUsed}/{job.scaffold.hireDays} days</span></div>
-            <p className={cn("mt-2 text-[14px] font-bold", left <= 2 && "text-safety font-extrabold")}>
-              {job.status === "complete" ? "Struck" : left > 0 ? `${left} days until ${gbp(job.scaffold.weeklyFee)}/wk fee` : `Overrun — ${gbp(job.scaffold.weeklyFee)}/wk charging`}
-            </p>
+            <div className="flex justify-between items-baseline"><span className="text-[13px] font-extrabold uppercase tracking-widest">Materials</span><span className={cn("font-display text-[20px]", r.materialSpend > r.materialAllowance && "text-safety")}>{gbp(r.materialSpend)} / {gbp(r.materialAllowance)}</span></div>
+            <p className="mt-1 text-[13px] font-bold text-ink/60">Logged on site vs quoted allowance · {r.materialSpend > r.materialAllowance ? `${gbp(r.materialSpend - r.materialAllowance)} over` : `${gbp(r.materialAllowance - r.materialSpend)} left`}</p>
+            <ul className="mt-3 space-y-1">
+              {items.filter((m) => (job.usage?.[m.id] ?? 0) > 0).map((m) => (
+                <li key={m.id} className="flex justify-between text-[13px] font-bold"><span>{job.usage?.[m.id]} × {m.name} <span className="text-ink/50">@ {gbp(m.price, 2)} {m.supplier}</span></span><span>{gbp((job.usage?.[m.id] ?? 0) * m.price, 2)}</span></li>
+              ))}
+              {!items.some((m) => (job.usage?.[m.id] ?? 0) > 0) && <li className="text-[13px] font-bold text-ink/60">Nothing logged yet — the site lead logs bags, tubs, mesh and beads in Stock.</li>}
+            </ul>
+          </Card>
+          <Card className="p-4">
+            <div className="flex justify-between items-baseline">
+              <span className="text-[13px] font-extrabold uppercase tracking-widest">Scaffold hire</span>
+              {scaffoldNeeded(job) && <span className="font-display text-[20px]">{job.scaffold.daysUsed}/{job.scaffold.hireDays} days</span>}
+            </div>
+            {scaffoldNeeded(job) ? (
+              <p className={cn("mt-2 text-[14px] font-bold", left <= 2 && "text-safety font-extrabold")}>
+                {job.status === "complete" ? "Struck" : left > 0 ? `${left} days until ${gbp(job.scaffold.weeklyFee)}/wk fee` : `Overrun — ${gbp(job.scaffold.weeklyFee)}/wk charging`}
+              </p>
+            ) : <p className="mt-2 text-[14px] font-bold text-ink/60">No scaffold on this job — no hire costs or countdown.</p>}
+            <label className="mt-3 flex items-center gap-2 text-[14px] font-extrabold">
+              <input type="checkbox" className="w-5 h-5 accent-[var(--color-ink)]" checked={!scaffoldNeeded(job)} onChange={(e) => mutateData((d) => { const j = d.jobs.find((x) => x.id === job.id)!; const none = e.target.checked; j.scaffold.required = !none; if (none) j.scaffoldCost = 0; else { if (!j.scaffold.hireDays) j.scaffold.hireDays = 21; if (!j.scaffoldCost) j.scaffoldCost = Math.round(jobArea(j) * 8); } })} />
+              No scaffold needed
+            </label>
           </Card>
           <Card className="p-4">
             <p className="text-[13px] font-extrabold uppercase tracking-widest">Variations</p>

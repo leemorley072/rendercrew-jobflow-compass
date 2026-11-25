@@ -43,7 +43,11 @@ export interface Job {
   quoted: number;
   materialCost: number;
   scaffoldCost: number;
-  scaffold: { hireDays: number; daysUsed: number; weeklyFee: number; struck?: boolean };
+  scaffold: { hireDays: number; daysUsed: number; weeklyFee: number; struck?: boolean; required?: boolean };
+  /** Man-days logged at shift close-out (men on site × days). */
+  manDays?: number;
+  /** Material quantities logged by the site lead, keyed by price-book item. */
+  usage?: Record<string, number>;
   menOnSite: number;
   bags: number;
   batches: string[];
@@ -131,7 +135,20 @@ export interface TenantData {
   forecast: Record<Region, DayWeather[]>;
   rainOverrides: number[];
   webhookLog: WebhookLog[];
+  materialOverrides?: MaterialOverrides;
 }
+
+export interface MaterialItem {
+  id: string;
+  name: string;
+  unit: string;
+  supplier: string;
+  price: number;
+  system: SystemKind | "all";
+  overridden?: boolean;
+}
+
+export type MaterialOverrides = Record<string, { supplier: string; price: number }>;
 
 export interface Tenant {
   id: string;
@@ -148,4 +165,5 @@ export interface OpsState {
   activeTenantId: string;
   tenants: Tenant[];
   data: Record<string, TenantData>;
+  agencyMaterials: MaterialItem[];
 }

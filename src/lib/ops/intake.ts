@@ -62,6 +62,8 @@ export interface NewJobInput {
   product: string;
   quoted: number;
   elevations: { name: string; area: number }[];
+  /** False for ground-floor, tower or internal work with no scaffold hire. */
+  scaffold?: boolean;
 }
 
 export function buildJob(d: TenantData, input: NewJobInput, source: "ghl" | "manual", oppId?: string): Job {
@@ -80,12 +82,14 @@ export function buildJob(d: TenantData, input: NewJobInput, source: "ghl" | "man
     elevations: input.elevations.map((e) => ({ name: e.name, area: e.area, stages: freshStages(input.system, 0) })),
     quoted: input.quoted,
     materialCost: Math.round(area * 19),
-    scaffoldCost: Math.round(area * 8),
-    scaffold: { hireDays: 21, daysUsed: 0, weeklyFee: 180 },
+    scaffoldCost: input.scaffold === false ? 0 : Math.round(area * 8),
+    scaffold: { hireDays: input.scaffold === false ? 0 : 21, daysUsed: 0, weeklyFee: 180, ...(input.scaffold === false ? { required: false } : {}) },
     menOnSite: 0,
     bags: 0,
     batches: [],
     daysWorked: 0,
+    manDays: 0,
+    usage: {},
     status: "intake",
     source,
     ...(oppId ? { ghlOpportunityId: oppId } : {}),

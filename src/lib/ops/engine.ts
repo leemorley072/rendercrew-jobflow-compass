@@ -1,5 +1,5 @@
 import { stageDef, elevationDone, currentStage } from "./stages";
-import type { Booking, Crew, DayWeather, Job, Region, TenantData, Variation } from "./types";
+import type { Booking, Crew, DayWeather, Job, Region, TenantData } from "./types";
 
 export const RAIN_LIMIT = 30;
 export const COLD_LIMIT = 5;
@@ -25,25 +25,14 @@ export function travelMinutes(a: { x: number; y: number }, b: { x: number; y: nu
   return Math.round(Math.hypot(a.x - b.x, a.y - b.y) * 1.3 + 4);
 }
 
-/** (Quoted + signed variations − direct costs − GP floor) ÷ crew day cost. */
-export function labourRunway(job: Job, variations: Variation[], gpFloor: number, dayRate: number) {
-  const signed = variations
-    .filter((v) => v.jobId === job.id && v.status === "signed")
-    .reduce((s, v) => s + v.cost, 0);
-  const revenue = job.quoted + signed;
-  const direct = job.materialCost + job.scaffoldCost;
-  const floor = revenue * gpFloor;
-  const affordable = dayRate > 0 ? (revenue - direct - floor) / dayRate : 0;
-  const remaining = affordable - job.daysWorked;
-  const margin = revenue > 0 ? (revenue - direct - job.daysWorked * dayRate) / revenue : 0;
-  return { revenue, signed, direct, floor, affordable, used: job.daysWorked, remaining, margin, over: remaining < 0 };
-}
+export { labourRunway } from "./costing";
 
 export function scaffoldLeft(job: Job) {
   return job.scaffold.hireDays - job.scaffold.daysUsed;
 }
 
-export function scaffoldTone(job: Job): "struck" | "red" | "amber" | "green" {
+export function scaffoldTone(job: Job): "none" | "struck" | "red" | "amber" | "green" {
+  if (job.scaffold.required === false) return "none";
   if (job.scaffold.struck || job.status === "complete") return "struck";
   const left = scaffoldLeft(job);
   if (left <= 2) return "red";

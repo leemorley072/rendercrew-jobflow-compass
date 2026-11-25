@@ -4,8 +4,9 @@ import { toast } from "sonner";
 import { Card, DesktopShell, SectionTitle } from "@/components/ops/chrome";
 import { useOps } from "@/lib/ops/store";
 import {
-  coatingSafe, gbp, jobArea, labourRunway, scaffoldLeft, scaffoldTone, TODAY, weatherFor, DAY_LABELS,
+  coatingSafe, gbp, jobArea, scaffoldLeft, scaffoldTone, TODAY, weatherFor, DAY_LABELS,
 } from "@/lib/ops/engine";
+import { runwayFor, scaffoldNeeded } from "@/lib/ops/costing";
 import { rejectStage, stageDef } from "@/lib/ops/stages";
 import { SECTOR, stageLabel } from "@/lib/ops/labels";
 import type { Job, Region } from "@/lib/ops/types";
@@ -25,6 +26,8 @@ export const Route = createFileRoute("/")({
 
 function ScaffoldBadge({ job }: { job: Job }) {
   const tone = scaffoldTone(job);
+  if (tone === "none")
+    return <div className="w-[92px] h-14 rounded-[8px] border border-ink/30 grid place-items-center text-center font-extrabold text-[11px] uppercase text-ink/60 leading-tight">No<br />scaffold</div>;
   if (tone === "struck")
     return <div className="w-[92px] h-14 rounded-[8px] border border-ink/30 grid place-items-center font-display text-[15px] text-ink/70">Struck</div>;
   const left = scaffoldLeft(job);
@@ -38,12 +41,12 @@ function ScaffoldBadge({ job }: { job: Job }) {
 }
 
 function Dashboard() {
-  const { data, tenant, mutateData } = useOps();
+  const { data, tenant, catalog, mutateData } = useOps();
   const navigate = useNavigate();
   const active = data.jobs.filter((j) => j.status === "active");
   const fleet = data.jobs.filter((j) => j.status !== "intake");
   const intake = data.jobs.filter((j) => j.status === "intake").reverse();
-  const imminent = active.filter((j) => scaffoldLeft(j) <= 7);
+  const imminent = active.filter((j) => scaffoldNeeded(j) && scaffoldLeft(j) <= 7);
   const pendingVars = data.variations.filter((v) => v.status === "pending");
   const regions: Region[] = ["Leeds", "Harrogate", "York"];
   const wet = regions.filter((r) => !coatingSafe(weatherFor(data, r, TODAY)));
@@ -112,7 +115,7 @@ function Dashboard() {
                   <tbody>
                     {fleet.map((j) => {
                       const crew = data.crews.find((c) => c.id === j.crewId);
-                      const r = labourRunway(j, data.variations, tenant.gpFloor, crew?.dayRate ?? tenant.defaultDayRate);
+                      const r = runwayFor(j, data, tenant, catalog);
                       const pv = pendingVars.filter((v) => v.jobId === j.id);
                       const red = j.status === "active" && (scaffoldTone(j) === "red" || r.over);
                       const rain = j.status === "active" && wet.includes(j.region);
