@@ -35,7 +35,9 @@
   --color-safety: var(--safety);
   --color-go: var(--go);
   --color-paper: var(--paper);
-  --font-display: "Archivo Black", sans-serif;
+  --color-line: var(--line);
+  --color-steel: var(--steel);
+  --font-display: "Inter", sans-serif;
   --font-sans: "Inter", sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -81,7 +83,9 @@
 
 :root {
   --radius: 1.125rem;
-  --stone: #d9d6d0;
+  --stone: #f7f8fa;
+  --line: #d5dae0;
+  --steel: #a4adb8;
   --ink: #101319;
   --safety: #ff6500;
   --go: #0a8a3a;
@@ -167,10 +171,11 @@
   }
 }
 
-@utility hard { box-shadow: 4px 4px 0 var(--ink); }
-@utility hard-sm { box-shadow: 2px 2px 0 var(--ink); }
+@utility hard { box-shadow: 0 1px 2px rgb(16 19 25 / 0.06), 0 6px 20px -8px rgb(16 19 25 / 0.14); }
+@utility hard-sm { box-shadow: 0 1px 3px rgb(16 19 25 / 0.1); }
 @utility hatch { background-image: repeating-linear-gradient(135deg, transparent 0 8px, rgb(13 13 13 / 0.12) 8px 9px); }
 @layer base {
+  .font-display { font-weight: 800; letter-spacing: -0.025em; font-optical-sizing: auto; }
   body { background: var(--stone); color: var(--ink); font-family: "Inter", sans-serif; }
 }
 @media print {

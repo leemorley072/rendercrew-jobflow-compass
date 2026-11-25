@@ -30,7 +30,7 @@ type SysFilter = "All" | "Silicone" | "EWI" | "Monocouche";
 
 function Chip({ active, children, onClick }: { active?: boolean; children: React.ReactNode; onClick?: () => void }) {
   return (
-    <button onClick={onClick} className={cn("h-11 px-4 rounded-full border-2 border-ink text-[14px] font-extrabold", active ? "bg-ink text-white" : "bg-white")}>
+    <button onClick={onClick} className={cn("h-11 px-4 rounded-full border border-line text-[14px] font-extrabold", active ? "bg-ink text-white" : "bg-white")}>
       {children}
     </button>
   );
@@ -120,12 +120,12 @@ function Dispatch() {
         <span className="text-[11px] font-extrabold uppercase tracking-widest mr-2">Region</span>
         {(["Leeds", "Harrogate", "York"] as Region[]).map((r) => <Chip key={r} active={region === r} onClick={() => setRegion(region === r ? null : r)}>{r}</Chip>)}
         <div className="ml-auto flex gap-2">
-          <button onClick={toggleRainEvent} className={cn("h-11 px-4 rounded-full border-2 border-ink text-[14px] font-extrabold inline-flex items-center gap-2", rainOn ? "bg-safety" : "bg-white")}>
+          <button onClick={toggleRainEvent} className={cn("h-11 px-4 rounded-full border border-line text-[14px] font-extrabold inline-flex items-center gap-2", rainOn ? "bg-safety" : "bg-white")}>
             <Umbrella className="w-4 h-4" strokeWidth={2.5} /> {rainOn ? "Rain event on · Fri–Sat" : "Simulate Rain Event"}
           </button>
           <DropdownMenu>
-            <DropdownMenuTrigger className="h-11 px-4 rounded-full bg-white border-2 border-ink text-[14px] font-extrabold">{span}-Day Gantt ▾</DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="border-2 border-ink rounded-[12px]">
+            <DropdownMenuTrigger className="h-11 px-4 rounded-full bg-white border border-line text-[14px] font-extrabold">{span}-Day Gantt ▾</DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="border border-line rounded-[12px]">
               <DropdownMenuItem className="font-extrabold" onSelect={() => setSpan(7)}>7-Day Gantt</DropdownMenuItem>
               <DropdownMenuItem className="font-extrabold" onSelect={() => setSpan(14)}>14-Day Gantt</DropdownMenuItem>
             </DropdownMenuContent>
@@ -135,7 +135,7 @@ function Dispatch() {
 
       {pending && choice ? (
         <Card className="mt-4 flex flex-wrap items-center gap-6 pr-5 overflow-hidden">
-          <div className="w-3 self-stretch bg-safety border-r-2 border-ink" />
+          <div className="w-3 self-stretch bg-safety border-r-2 border-line" />
           <div className="py-5 min-w-[300px] flex-1">
             <p className="text-[11px] font-extrabold uppercase tracking-widest text-ink/60">Pending job · {pending.source === "ghl" ? "GHL" : "Manual"}{intake.length > 1 && ` · 1 of ${intake.length}`}</p>
             <h2 className="mt-1 font-display text-[20px]">{pending.address}</h2>
@@ -147,7 +147,7 @@ function Dispatch() {
             <p className="text-[11px] font-extrabold uppercase tracking-widest text-ink/60">{choice === ranks[0] ? "Top ranked match" : "Your pick"}</p>
             <DropdownMenu>
               <DropdownMenuTrigger className="font-extrabold text-[16px] text-left">{choice.crew.name.replace(" · ", " — ")}'s Team ▾</DropdownMenuTrigger>
-              <DropdownMenuContent className="border-2 border-ink rounded-[12px] w-80">
+              <DropdownMenuContent className="border border-line rounded-[12px] w-80">
                 {ranks.map((r) => (
                   <DropdownMenuItem key={r.crew.id} onSelect={() => setCrewPick(r.crew.id)} className="font-bold flex justify-between">
                     <span>{r.crew.name}</span><span>{r.score}% · {r.minutes} min{r.start === undefined ? " · full" : ""}</span>
@@ -157,20 +157,20 @@ function Dispatch() {
             </DropdownMenu>
             <p className="text-[13px] font-bold text-ink/60">{choice.crew.men} Plasterers • {choice.crew.certs} • {choice.minutes}-min drive{choice.start !== undefined ? ` • from ${DAY_LABELS[choice.start]}` : " • no free slot"}</p>
           </div>
-          <button onClick={confirm} className="h-16 px-6 rounded-full bg-safety border-2 border-ink text-[17px] font-extrabold hard">
+          <button onClick={confirm} className="h-16 px-6 rounded-full bg-safety border border-line text-[17px] font-extrabold hard">
             Confirm & Dispatch {choice.crew.name.split(" · ")[0]} →
           </button>
         </Card>
       ) : (
         <Card className="mt-4 p-5 flex items-center justify-between">
           <p className="text-[15px] font-extrabold">{data.crews.length === 0 ? "Add crews in the agency admin before scheduling jobs." : "No jobs waiting to schedule. New won jobs from GoHighLevel appear here."}</p>
-          <Link to="/ghl" className="h-11 px-4 rounded-full bg-white border-2 border-ink text-[14px] font-extrabold grid place-items-center">Test GHL intake</Link>
+          <Link to="/ghl" className="h-11 px-4 rounded-full bg-white border border-line text-[14px] font-extrabold grid place-items-center">Test GHL intake</Link>
         </Card>
       )}
 
       <Card className="mt-4 overflow-x-auto">
         <div className="min-w-[1000px]">
-          <div className="grid border-b-2 border-ink" style={{ gridTemplateColumns: `230px repeat(${span}, 1fr)` }}>
+          <div className="grid border-b-2 border-line" style={{ gridTemplateColumns: `230px repeat(${span}, 1fr)` }}>
             <div className="px-4 py-3 text-[13px] font-extrabold uppercase tracking-widest">Fleet · Week 23</div>
             {days.map((d) => {
               const w = weatherFor(data, region ?? tenant.homeRegion, d);
@@ -246,15 +246,15 @@ function Dispatch() {
 function GanttCell({ cell, span, dim }: { cell: Cell; span: number; dim: boolean }) {
   const end = Math.min(cell.start + cell.len, span);
   const style = { gridColumn: `${cell.start + 2} / ${end + 2}`, gridRow: 1 };
-  const base = "mx-1 h-11 rounded-[8px] border-2 px-3 flex items-center text-[13px] font-extrabold truncate";
+  const base = "mx-1 h-11 rounded-[8px] border px-3 flex items-center text-[13px] font-extrabold truncate";
   const kinds: Record<Cell["kind"], string> = {
-    work: "bg-ink text-white border-ink",
-    new: "bg-safety text-ink border-ink hard",
-    hold: "bg-white hatch border-ink text-ink",
-    gap: "bg-white/40 border-dashed border-ink text-ink/70",
-    depot: "bg-stone border-ink text-ink",
+    work: "bg-ink text-white border-line",
+    new: "bg-safety text-ink border-line hard",
+    hold: "bg-white hatch border-line text-ink",
+    gap: "bg-white/40 border-dashed border-line text-ink/70",
+    depot: "bg-stone border-line text-ink",
     open: "border-dashed border-go text-go",
-    pivot: "bg-go text-white border-ink",
+    pivot: "bg-go text-white border-line",
   };
   const inner = <div className={cn(base, kinds[cell.kind], dim && "opacity-30")} title={cell.label}>{cell.label}</div>;
   if (cell.jobId && cell.kind !== "open")

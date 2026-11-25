@@ -43,8 +43,8 @@ function JobDetail() {
               {e.defect && <p className="mt-1 text-[13px] font-extrabold text-safety">{e.defect}</p>}
               <div className="mt-3 grid grid-cols-6 gap-2">
                 {e.stages.map((s) => (
-                  <div key={s.code} className={cn("rounded-[10px] border-2 p-2 min-h-[110px] flex flex-col", s.status === "locked" ? "border-ink/30 text-ink/50" : s.status === "upload" ? "border-dashed border-ink" : "border-ink")}>
-                    {s.photo ? <img src={s.photo} alt="" className="w-full h-12 object-cover rounded-[6px] border-2 border-ink" /> : <div className="h-12 grid place-items-center">{s.status === "locked" ? <Lock className="w-5 h-5" /> : <Camera className="w-5 h-5" />}</div>}
+                  <div key={s.code} className={cn("rounded-[10px] border p-2 min-h-[110px] flex flex-col", s.status === "locked" ? "border-ink/30 text-ink/50" : s.status === "upload" ? "border-dashed border-line" : "border-line")}>
+                    {s.photo ? <img src={s.photo} alt="" className="w-full h-12 object-cover rounded-[6px] border border-line" /> : <div className="h-12 grid place-items-center">{s.status === "locked" ? <Lock className="w-5 h-5" /> : <Camera className="w-5 h-5" />}</div>}
                     <p className="mt-1 text-[11px] font-extrabold">{s.code} · {stageDef(s.code).short}</p>
                     <p className={cn("text-[11px] font-extrabold mt-auto", s.status === "verified" && "text-go", s.review === "rejected" && "text-safety")}>
                       {s.status === "verified" ? (<span className="inline-flex items-center gap-1"><Check className="w-3 h-3" strokeWidth={4} />Verified</span>) : s.review === "rejected" ? "Recoat" : s.status === "upload" ? "Awaiting photo" : "Locked"}
@@ -68,26 +68,26 @@ function JobDetail() {
             <p className="text-[13px] font-extrabold uppercase tracking-widest">Variations</p>
             {vars.length === 0 && <p className="mt-2 text-[14px] font-bold text-ink/60">None raised.</p>}
             {vars.map((v) => (
-              <Link key={v.id} to="/variations/$variationId" params={{ variationId: v.id }} className="mt-2 flex justify-between items-center h-12 px-3 rounded-[10px] border-2 border-ink">
+              <Link key={v.id} to="/variations/$variationId" params={{ variationId: v.id }} className="mt-2 flex justify-between items-center h-12 px-3 rounded-[10px] border border-line">
                 <span className="text-[14px] font-extrabold">{v.number} · {v.headline}</span>
-                <span className={cn("text-[12px] font-extrabold rounded-full px-2 py-0.5 border-2 border-ink", v.status === "signed" ? "bg-go text-white" : "bg-safety")}>{v.status === "signed" ? "Signed" : "Pending"} {gbp(v.cost)}</span>
+                <span className={cn("text-[12px] font-extrabold rounded-full px-2 py-0.5 border border-line", v.status === "signed" ? "bg-go text-white" : "bg-safety")}>{v.status === "signed" ? "Signed" : "Pending"} {gbp(v.cost)}</span>
               </Link>
             ))}
           </Card>
           <Card className="p-4 space-y-3">
             <p className="text-[13px] font-extrabold uppercase tracking-widest">Crew</p>
-            <select className="w-full h-12 px-3 rounded-[10px] border-2 border-ink font-extrabold bg-white" value={job.crewId ?? ""}
+            <select className="w-full h-12 px-3 rounded-[10px] border border-line font-extrabold bg-white" value={job.crewId ?? ""}
               onChange={(e) => mutateData((d) => { const j = d.jobs.find((x) => x.id === job.id)!; if (e.target.value) j.crewId = e.target.value; else delete j.crewId; })}>
               <option value="">Unassigned</option>
               {data.crews.map((c) => <option key={c.id} value={c.id}>{c.name} · {gbp(c.dayRate)}/day</option>)}
             </select>
-            <Link to="/site/$jobId" params={{ jobId: job.id }} search={{}} className="w-full h-14 rounded-full bg-white border-2 border-ink font-extrabold grid place-items-center">Open Site Job Card</Link>
+            <Link to="/site/$jobId" params={{ jobId: job.id }} search={{}} className="w-full h-14 rounded-full bg-white border border-line font-extrabold grid place-items-center">Open Site Job Card</Link>
             {job.status === "complete" ? (
               <>
-                <Link to="/certificate/$jobId" params={{ jobId: job.id }} className="w-full h-14 rounded-full bg-go text-white border-2 border-ink font-extrabold grid place-items-center">Warranty Certificate</Link>
+                <Link to="/certificate/$jobId" params={{ jobId: job.id }} className="w-full h-14 rounded-full bg-go text-white border border-line font-extrabold grid place-items-center">Warranty Certificate</Link>
                 {!job.reviewRequested && (
                   <button onClick={() => { mutateData((d) => { d.jobs.find((x) => x.id === job.id)!.reviewRequested = true; }); toast.success(`Review request queued for ${job.customer}`); }}
-                    className="w-full h-14 rounded-full bg-white border-2 border-ink font-extrabold">Send 5-Star Review Request</button>
+                    className="w-full h-14 rounded-full bg-white border border-line font-extrabold">Send 5-Star Review Request</button>
                 )}
               </>
             ) : (

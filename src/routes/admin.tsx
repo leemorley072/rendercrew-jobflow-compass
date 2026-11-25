@@ -71,7 +71,7 @@ function Admin() {
           {state.tenants.map((x) => {
             const dd = state.data[x.id]!;
             return (
-              <button key={x.id} onClick={() => setSel(x.id)} className={cn("w-full text-left bg-white border-2 border-ink rounded-[18px] p-4", sel === x.id && "hard outline outline-2 outline-ink")}>
+              <button key={x.id} onClick={() => setSel(x.id)} className={cn("w-full text-left bg-white border border-line rounded-[18px] p-4", sel === x.id && "hard outline outline-2 outline-ink")}>
                 <div className="flex justify-between"><span className="font-display text-[17px]">{x.name}</span>{state.activeTenantId === x.id && <span className="text-[11px] font-extrabold bg-go text-white rounded-full px-2 py-0.5 h-fit">LIVE</span>}</div>
                 <p className="text-[13px] font-bold text-ink/60">{dd.crews.length} gangs • {dd.jobs.filter((j) => j.status === "active").length} active sites • {x.ghlLocationId}</p>
               </button>
@@ -84,10 +84,10 @@ function Admin() {
               <label className="block"><span className={labelCls}>GHL Location ID</span><input className={fieldCls} value={nf.loc} onChange={(e) => setNf({ ...nf, loc: e.target.value })} placeholder="ve9EPM428h8vShlRW1KT" /></label>
               <label className="block"><span className={labelCls}>Home region</span>
                 <select className={fieldCls} value={nf.region} onChange={(e) => setNf({ ...nf, region: e.target.value as Region })}><option>Leeds</option><option>Harrogate</option><option>York</option></select></label>
-              <button className="w-full h-14 rounded-full bg-safety border-2 border-ink font-extrabold hard">Create Sub-Account</button>
+              <button className="w-full h-14 rounded-full bg-safety border border-line font-extrabold hard">Create Sub-Account</button>
             </form>
           </Card>
-          <button onClick={() => { reset(); toast.success("Demo data restored"); }} className="w-full h-12 rounded-full bg-white border-2 border-ink font-extrabold">Reset demo data</button>
+          <button onClick={() => { reset(); toast.success("Demo data restored"); }} className="w-full h-12 rounded-full bg-white border border-line font-extrabold">Reset demo data</button>
         </div>
 
         <div className="space-y-5">
@@ -107,12 +107,12 @@ function Admin() {
           <Card className="overflow-hidden">
             {d.crews.length === 0 && <p className="p-5 font-bold">No gangs yet — add the first one below so jobs can be scheduled.</p>}
             {d.crews.map((c) => (
-              <div key={c.id} className="grid grid-cols-[1fr_90px_130px_1fr_44px] gap-3 items-center px-4 py-3 border-b-2 border-ink">
+              <div key={c.id} className="grid grid-cols-[1fr_90px_130px_1fr_44px] gap-3 items-center px-4 py-3 border-b-2 border-line">
                 <div><p className="font-display text-[15px]">{c.name}</p><p className="text-[12px] font-bold text-ink/60">{c.specialty}</p></div>
                 <label className="text-[11px] font-extrabold uppercase">Men<input className={fieldCls + " h-10"} inputMode="numeric" value={c.men} onChange={(e) => mutate((s) => { s.data[t.id]!.crews.find((x) => x.id === c.id)!.men = Number(e.target.value) || 1; })} /></label>
                 <label className="text-[11px] font-extrabold uppercase">Day rate £<input className={fieldCls + " h-10"} inputMode="numeric" value={c.dayRate} onChange={(e) => mutate((s) => { s.data[t.id]!.crews.find((x) => x.id === c.id)!.dayRate = Number(e.target.value) || 0; })} /></label>
                 <p className="text-[12px] font-bold">{c.skills.join(" · ")} · {gbp(c.dayRate / Math.max(1, c.men))}/man</p>
-                <button aria-label={`Remove ${c.name}`} onClick={() => mutate((s) => { const dd = s.data[t.id]!; dd.crews = dd.crews.filter((x) => x.id !== c.id); dd.bookings = dd.bookings.filter((b) => b.crewId !== c.id); })} className="w-10 h-10 rounded-full border-2 border-ink grid place-items-center"><Trash2 className="w-4 h-4" /></button>
+                <button aria-label={`Remove ${c.name}`} onClick={() => mutate((s) => { const dd = s.data[t.id]!; dd.crews = dd.crews.filter((x) => x.id !== c.id); dd.bookings = dd.bookings.filter((b) => b.crewId !== c.id); })} className="w-10 h-10 rounded-full border border-line grid place-items-center"><Trash2 className="w-4 h-4" /></button>
               </div>
             ))}
             <form onSubmit={addCrew} className="grid grid-cols-[1fr_80px_110px_1fr_1fr_auto] gap-3 items-end p-4 bg-stone/40">
@@ -124,7 +124,7 @@ function Admin() {
                 <select className={fieldCls} value={cf.skills} onChange={(e) => setCf({ ...cf, skills: e.target.value })}>
                   <option value="silicone">Silicone</option><option value="monocouche">Monocouche</option><option value="silicone,monocouche">Both</option><option value="prep,silicone">Prep & patch</option>
                 </select></label>
-              <button className="h-12 px-5 rounded-full bg-safety border-2 border-ink font-extrabold">Add Gang</button>
+              <button className="h-12 px-5 rounded-full bg-safety border border-line font-extrabold">Add Gang</button>
             </form>
           </Card>
         </div>

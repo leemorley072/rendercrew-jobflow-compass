@@ -51,8 +51,8 @@ function GhlHarness() {
           <Card className="p-4">
             <p className="text-[13px] font-bold text-ink/70">This is what GoHighLevel sends when an opportunity moves to <b>Won</b>. Edit it to test bad data, another location, or a deal that isn't won.</p>
             <textarea value={text} onChange={(e) => setText(e.target.value)} spellCheck={false}
-              className="mt-3 w-full h-[420px] font-mono text-[13px] p-4 rounded-[10px] border-2 border-ink bg-stone/30 outline-none" />
-            <button onClick={send} disabled={sending} className="mt-4 w-full h-16 rounded-full bg-safety border-2 border-ink text-[17px] font-extrabold hard disabled:opacity-60">
+              className="mt-3 w-full h-[420px] font-mono text-[13px] p-4 rounded-[10px] border border-line bg-stone/30 outline-none" />
+            <button onClick={send} disabled={sending} className="mt-4 w-full h-16 rounded-full bg-safety border border-line text-[17px] font-extrabold hard disabled:opacity-60">
               {sending ? "Delivering…" : "Send Test Webhook"}
             </button>
           </Card>
@@ -63,8 +63,8 @@ function GhlHarness() {
             <Card className="p-3 shadow-none space-y-2">
               {data.webhookLog.length === 0 && <p className="p-2 text-[14px] font-bold text-ink/60">Nothing received yet. Send a test payload.</p>}
               {data.webhookLog.map((l) => (
-                <div key={l.id} className="flex gap-3 items-start p-2 rounded-[10px] border-2 border-ink">
-                  <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[12px] font-extrabold border-2 border-ink", l.status === 200 ? "bg-go text-white" : l.status === 202 ? "bg-white" : "bg-safety")}>{l.status}</span>
+                <div key={l.id} className="flex gap-3 items-start p-2 rounded-[10px] border border-line">
+                  <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[12px] font-extrabold border border-line", l.status === 200 ? "bg-go text-white" : l.status === 202 ? "bg-white" : "bg-safety")}>{l.status}</span>
                   <div className="min-w-0">
                     <p className="text-[13px] font-extrabold">{l.message}</p>
                     <p className="text-[11px] font-bold text-ink/60">{l.at}{l.jobId && <> · <Link to="/site/$jobId" params={{ jobId: l.jobId }} search={{}} className="underline">open job card</Link></>}</p>
@@ -80,7 +80,7 @@ function GhlHarness() {
                 <Card key={j.id} className="p-4 shadow-none">
                   <div className="flex justify-between"><span className="font-display text-[16px]">{j.address}</span><span className="font-display text-[16px]">{gbp(j.quoted)}</span></div>
                   <p className="text-[13px] font-bold text-ink/60">{j.ref} • {jobArea(j)}m² • {j.elevations.length} elevations × 6 stage gates • {j.status === "intake" ? "awaiting crew" : j.status}</p>
-                  {j.status === "intake" && <Link to="/dispatch" search={{ job: j.id }} className="mt-3 h-11 rounded-full bg-safety border-2 border-ink font-extrabold grid place-items-center">Schedule & Assign Crew</Link>}
+                  {j.status === "intake" && <Link to="/dispatch" search={{ job: j.id }} className="mt-3 h-11 rounded-full bg-safety border border-line font-extrabold grid place-items-center">Schedule & Assign Crew</Link>}
                 </Card>
               ))}
             </div>

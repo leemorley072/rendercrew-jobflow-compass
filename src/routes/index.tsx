@@ -26,11 +26,11 @@ export const Route = createFileRoute("/")({
 function ScaffoldBadge({ job }: { job: Job }) {
   const tone = scaffoldTone(job);
   if (tone === "struck")
-    return <div className="w-[92px] h-14 rounded-[8px] border-2 border-ink/30 grid place-items-center font-display text-[15px] text-ink/70">Struck</div>;
+    return <div className="w-[92px] h-14 rounded-[8px] border border-ink/30 grid place-items-center font-display text-[15px] text-ink/70">Struck</div>;
   const left = scaffoldLeft(job);
   const strikeDay = DAY_LABELS[(TODAY + Math.max(0, left)) % 7]?.split(" ")[0];
   return (
-    <div className={cn("w-[92px] h-14 rounded-[8px] border-2 border-ink grid place-items-center leading-none py-1", tone === "red" && "bg-safety hard-sm", tone === "green" && "bg-go text-white", tone === "amber" && "bg-white")}>
+    <div className={cn("w-[92px] h-14 rounded-[8px] border border-line grid place-items-center leading-none py-1", tone === "red" && "bg-safety hard-sm", tone === "green" && "bg-go text-white", tone === "amber" && "bg-white")}>
       <span className="font-display text-[20px]">{Math.max(0, left)}d</span>
       <span className="text-[10px] font-extrabold uppercase">{tone === "red" ? `Strike ${strikeDay}` : tone}</span>
     </div>
@@ -85,7 +85,7 @@ function Dashboard() {
             {js.length > 0 && (stopped ? (
               <span className="text-[12px] font-extrabold uppercase bg-go rounded-full px-3 py-1.5">Crews told · Topcoat stopped</span>
             ) : (
-              <button onClick={stopTopcoat} className="h-9 px-3 rounded-full bg-white text-ink border-2 border-safety text-[12px] font-extrabold uppercase">Stop Topcoat</button>
+              <button onClick={stopTopcoat} className="h-9 px-3 rounded-full bg-white text-ink border border-safety text-[12px] font-extrabold uppercase">Stop Topcoat</button>
             ))}
           </div>
         );
@@ -99,13 +99,13 @@ function Dashboard() {
               <div className="p-10 text-center">
                 <p className="font-display text-[20px]">No sites yet</p>
                 <p className="mt-2 text-[14px] font-bold text-ink/70">Won jobs from GoHighLevel land here once you schedule a crew.</p>
-                <Link to="/ghl" className="inline-flex mt-5 h-12 px-5 items-center rounded-full bg-white border-2 border-ink font-extrabold">Test the GHL intake</Link>
+                <Link to="/ghl" className="inline-flex mt-5 h-12 px-5 items-center rounded-full bg-white border border-line font-extrabold">Test the GHL intake</Link>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[760px]">
                   <thead>
-                    <tr className="border-b-2 border-ink text-left text-[11px] font-extrabold uppercase tracking-widest text-ink/70">
+                    <tr className="border-b-2 border-line text-left text-[11px] font-extrabold uppercase tracking-widest text-ink/70">
                       <th className="px-4 py-3">Job</th><th className="py-3">Spec / Stage</th><th className="py-3">Scaffold</th><th className="py-3">Status</th><th className="py-3 pr-4">Crew</th>
                     </tr>
                   </thead>
@@ -118,7 +118,7 @@ function Dashboard() {
                       const rain = j.status === "active" && wet.includes(j.region);
                       return (
                         <tr key={j.id} onClick={() => navigate({ to: "/jobs/$jobId", params: { jobId: j.id } })}
-                          className={cn("border-b-2 border-ink last:border-b-0 cursor-pointer hover:bg-stone/40", red && "bg-safety/10")}>
+                          className={cn("border-b-2 border-line last:border-b-0 cursor-pointer hover:bg-stone/40", red && "bg-safety/10")}>
                           <td className="px-4 py-3"><div className="font-display text-[15px]">{j.ref}</div><div className="text-[13px] font-semibold text-ink/70">{j.address}</div></td>
                           <td className="py-3 pr-3"><div className="text-[14px] font-extrabold">{jobArea(j)}m² {j.product}</div><div className="text-[13px] font-semibold text-ink/70">{stageLabel(j)}</div></td>
                           <td className="py-3"><ScaffoldBadge job={j} /></td>
@@ -126,7 +126,7 @@ function Dashboard() {
                             {j.status === "complete" ? (
                               <>
                                 {j.warrantyExported ? (
-                                  <span className="inline-flex items-center gap-1.5 bg-go text-white border-2 border-ink rounded-full px-2.5 py-0.5 text-[11px] uppercase"><span className="w-1.5 h-1.5 bg-white rounded-full" />Warranty Exported</span>
+                                  <span className="inline-flex items-center gap-1.5 bg-go text-white border border-line rounded-full px-2.5 py-0.5 text-[11px] uppercase"><span className="w-1.5 h-1.5 bg-white rounded-full" />Warranty Exported</span>
                                 ) : (
                                   <Link to="/certificate/$jobId" params={{ jobId: j.id }} onClick={(e) => e.stopPropagation()} className="underline">Export warranty</Link>
                                 )}
@@ -161,10 +161,10 @@ function Dashboard() {
             <div className="space-y-4">
               {intake.slice(0, 2).map((j) => (
                 <Card key={j.id} className="p-4">
-                  <span className="inline-flex items-center gap-1.5 bg-go text-white border-2 border-ink rounded-full px-2.5 py-0.5 text-[11px] font-extrabold uppercase"><span className="w-1.5 h-1.5 bg-white rounded-full" />Won</span>
+                  <span className="inline-flex items-center gap-1.5 bg-go text-white border border-line rounded-full px-2.5 py-0.5 text-[11px] font-extrabold uppercase"><span className="w-1.5 h-1.5 bg-white rounded-full" />Won</span>
                   <h3 className="mt-2 font-display text-[20px]">{j.address}</h3>
                   <div className="flex justify-between items-baseline"><span className="text-[14px] font-extrabold">{jobArea(j)}m²</span><span className="font-display text-[20px]">{gbp(j.quoted)}</span></div>
-                  <Link to="/dispatch" search={{ job: j.id }} className="mt-4 w-full h-16 rounded-full bg-safety border-2 border-ink text-[17px] font-extrabold flex items-center justify-center hard">Schedule & Assign Crew</Link>
+                  <Link to="/dispatch" search={{ job: j.id }} className="mt-4 w-full h-16 rounded-full bg-safety border border-line text-[17px] font-extrabold flex items-center justify-center hard">Schedule & Assign Crew</Link>
                 </Card>
               ))}
             </div>
@@ -177,17 +177,17 @@ function Dashboard() {
             <div className="space-y-3">
               {feed.slice(0, 5).map(({ j, e, s }) => (
                 <Card key={`${j.id}${e.name}${s.code}`} className="p-3 flex gap-3 items-center shadow-none">
-                  <img src={s.photo} alt={`${j.ref} ${e.name} ${stageDef(s.code).short}`} className="w-20 h-20 object-cover rounded-[8px] border-2 border-ink" loading="lazy" />
+                  <img src={s.photo} alt={`${j.ref} ${e.name} ${stageDef(s.code).short}`} className="w-20 h-20 object-cover rounded-[8px] border border-line" loading="lazy" />
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-extrabold truncate">{j.ref} · {e.name} {stageDef(s.code).short}</p>
                     {s.review === "rejected" ? (
-                      <span className="mt-2 inline-block bg-safety border-2 border-ink rounded-full px-3 py-0.5 text-[11px] font-extrabold uppercase">Rejected · Recoat</span>
+                      <span className="mt-2 inline-block bg-safety border border-line rounded-full px-3 py-0.5 text-[11px] font-extrabold uppercase">Rejected · Recoat</span>
                     ) : (
                       <div className="mt-2 flex gap-2">
                         <button onClick={() => mutateData((d) => { const st = d.jobs.find((x) => x.id === j.id)!.elevations.find((x) => x.name === e.name)!.stages.find((x) => x.code === s.code)!; st.review = "approved"; })}
-                          className="flex-1 h-11 rounded-full bg-go text-white border-2 border-ink text-[14px] font-extrabold">Approve</button>
+                          className="flex-1 h-11 rounded-full bg-go text-white border border-line text-[14px] font-extrabold">Approve</button>
                         <button aria-label="Reject photo" onClick={() => { mutateData((d) => rejectStage(d.jobs.find((x) => x.id === j.id)!.elevations.find((x) => x.name === e.name)!, s.code)); toast(`${j.ref} ${e.name} sent back for recoat`); }}
-                          className="w-11 h-11 rounded-full bg-white border-2 border-ink grid place-items-center"><X className="w-4 h-4" strokeWidth={3} /></button>
+                          className="w-11 h-11 rounded-full bg-white border border-line grid place-items-center"><X className="w-4 h-4" strokeWidth={3} /></button>
                       </div>
                     )}
                   </div>

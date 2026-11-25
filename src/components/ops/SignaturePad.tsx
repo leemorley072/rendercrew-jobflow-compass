@@ -53,7 +53,7 @@ export function SignaturePad({ onChange, signer, disabled }: { onChange: (data: 
   };
 
   return (
-    <div className="relative mt-4 rounded-[12px] border-2 border-dashed border-ink bg-[#f0eeea] h-[200px]">
+    <div className="relative mt-4 rounded-[12px] border border-dashed border-line bg-stone h-[200px]">
       <canvas
         ref={ref}
         className="absolute inset-0 w-full h-full touch-none"
@@ -63,11 +63,11 @@ export function SignaturePad({ onChange, signer, disabled }: { onChange: (data: 
         onPointerCancel={up}
         aria-label="Signature pad"
       />
-      <div className="absolute left-4 right-24 bottom-4 border-t-2 border-ink pt-1 text-[12px] font-extrabold uppercase tracking-[0.18em] pointer-events-none">
+      <div className="absolute left-4 right-24 bottom-4 border-t-2 border-line pt-1 text-[12px] font-extrabold uppercase tracking-[0.18em] pointer-events-none">
         Homeowner · {signer}
       </div>
       {!disabled && (
-        <button type="button" onClick={clear} className="absolute right-3 bottom-3 h-11 px-5 rounded-full bg-white border-2 border-ink text-[15px] font-extrabold">
+        <button type="button" onClick={clear} className="absolute right-3 bottom-3 h-11 px-5 rounded-full bg-white border border-line text-[15px] font-extrabold">
           Clear
         </button>
       )}

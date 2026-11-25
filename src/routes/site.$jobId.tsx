@@ -40,7 +40,7 @@ function JobCard() {
     return (
       <MobileFrame>
         <MobileHeader title="Job not found" region={tenant.homeRegion} />
-        <div className="px-4"><Link to="/site" className="h-14 rounded-full bg-white border-2 border-ink font-extrabold grid place-items-center">Back to my sites</Link></div>
+        <div className="px-4"><Link to="/site" className="h-14 rounded-full bg-white border border-line font-extrabold grid place-items-center">Back to my sites</Link></div>
       </MobileFrame>
     );
 
@@ -104,12 +104,12 @@ function JobCard() {
       <div className="px-4 pb-48 space-y-4">
         {tab === "job" && (
           <>
-            <section className="bg-white border-2 border-ink rounded-[18px] p-4 hard">
+            <section className="bg-white border border-line rounded-[18px] p-4 hard">
               <div className="flex justify-between items-baseline">
                 <span className="text-[14px] font-extrabold uppercase">Scaffold hire</span>
                 <span className="font-display text-[20px]">{job.scaffold.daysUsed}/{job.scaffold.hireDays} days</span>
               </div>
-              <div className="mt-3 h-5 rounded-full border-2 border-ink bg-white overflow-hidden">
+              <div className="mt-3 h-5 rounded-full border border-line bg-white overflow-hidden">
                 <div className={cn("h-full", left <= 0 ? "bg-safety" : "bg-ink")} style={{ width: `${pct}%` }} />
               </div>
               <p className={cn("mt-2 text-[15px] font-semibold", left <= 0 && "text-safety font-extrabold")}>
@@ -117,7 +117,7 @@ function JobCard() {
               </p>
             </section>
 
-            <div className="bg-white border-2 border-ink rounded-full p-1.5 grid h-14" style={{ gridTemplateColumns: `repeat(${job.elevations.length}, 1fr)` }}>
+            <div className="bg-white border border-line rounded-full p-1.5 grid h-14" style={{ gridTemplateColumns: `repeat(${job.elevations.length}, 1fr)` }}>
               {job.elevations.map((e) => (
                 <button key={e.name} onClick={() => setElName(e.name)} className={cn("rounded-full text-[15px] font-extrabold", e.name === el.name && "bg-ink text-white")}>
                   {e.name}
@@ -125,7 +125,7 @@ function JobCard() {
               ))}
             </div>
 
-            <section className="bg-white border-2 border-ink rounded-[18px] p-4 hard">
+            <section className="bg-white border border-line rounded-[18px] p-4 hard">
               <div className="flex justify-between items-baseline">
                 <h2 className="font-display text-[20px]">{el.name} Elevation</h2>
                 <span className="font-display text-[20px]">{el.area}m²</span>
@@ -140,7 +140,7 @@ function JobCard() {
             </section>
 
             {pendingVar && (
-              <section className="bg-safety border-2 border-ink rounded-[18px] p-4 hard">
+              <section className="bg-safety border border-line rounded-[18px] p-4 hard">
                 <p className="text-[13px] font-extrabold uppercase tracking-widest">Sign variation</p>
                 <h3 className="mt-1 font-display text-[22px] leading-7">{gbp(pendingVar.cost)} {pendingVar.headline}</h3>
                 <Link to="/variations/$variationId" params={{ variationId: pendingVar.id }} className="mt-3 h-14 rounded-full bg-ink text-white text-[16px] font-extrabold flex items-center justify-center gap-2">
@@ -154,8 +154,8 @@ function JobCard() {
                 const d = stageDef(s.code);
                 if (s.status === "verified")
                   return (
-                    <div key={s.code} className="bg-white border-2 border-ink rounded-[18px] p-4 hard min-h-[124px] relative overflow-hidden">
-                      {s.photo && <img src={s.photo} alt="" className="absolute right-2 top-2 w-12 h-12 rounded-[6px] border-2 border-ink object-cover" />}
+                    <div key={s.code} className="bg-white border border-line rounded-[18px] p-4 hard min-h-[124px] relative overflow-hidden">
+                      {s.photo && <img src={s.photo} alt="" className="absolute right-2 top-2 w-12 h-12 rounded-[6px] border border-line object-cover" />}
                       <Check className="w-6 h-6 text-go" strokeWidth={3.5} />
                       <p className="mt-3 font-display text-[16px] leading-5">{d.short}</p>
                       <p className="text-[13px] font-extrabold text-go">Verified</p>
@@ -163,14 +163,14 @@ function JobCard() {
                   );
                 if (s.status === "upload")
                   return (
-                    <button key={s.code} onClick={() => pick(s.code)} disabled={busy} className="text-left bg-white border-2 border-dashed border-ink rounded-[18px] p-4 min-h-[124px]">
+                    <button key={s.code} onClick={() => pick(s.code)} disabled={busy} className="text-left bg-white border border-dashed border-line rounded-[18px] p-4 min-h-[124px]">
                       <Camera className="w-6 h-6" strokeWidth={2.5} />
                       <p className="mt-3 font-display text-[16px] leading-5">{d.short}</p>
                       <p className={cn("text-[13px] font-extrabold", s.review === "rejected" ? "text-safety" : "")}>{busy ? "Uploading…" : s.review === "rejected" ? "Recoat · re-upload" : "Tap to Upload"}</p>
                     </button>
                   );
                 return (
-                  <div key={s.code} className="border-2 border-ink/40 rounded-[18px] p-4 min-h-[124px] text-ink/55">
+                  <div key={s.code} className="border border-ink/40 rounded-[18px] p-4 min-h-[124px] text-ink/55">
                     <Lock className="w-6 h-6" strokeWidth={2.5} />
                     <p className="mt-3 font-display text-[16px] leading-5">{d.short}</p>
                     <p className="text-[13px] font-extrabold">Locked</p>
@@ -179,12 +179,12 @@ function JobCard() {
               })}
             </div>
 
-            <section className="bg-white border-2 border-ink rounded-[18px] grid grid-cols-2">
-              <div className="p-4 border-r-2 border-ink"><p className="font-display text-[30px] leading-none">{job.menOnSite}</p><p className="mt-1 text-[14px] font-extrabold uppercase">Men on site</p></div>
+            <section className="bg-white border border-line rounded-[18px] grid grid-cols-2">
+              <div className="p-4 border-r-2 border-line"><p className="font-display text-[30px] leading-none">{job.menOnSite}</p><p className="mt-1 text-[14px] font-extrabold uppercase">Men on site</p></div>
               <div className="p-4"><p className="font-display text-[30px] leading-none">{job.bags}</p><p className="mt-1 text-[14px] font-extrabold uppercase">Bags applied</p></div>
             </section>
 
-            <Link to="/variations/new/$jobId" params={{ jobId: job.id }} search={{ elevation: el.name }} className="w-full h-14 rounded-full bg-white border-2 border-ink text-[16px] font-extrabold flex items-center justify-center gap-2">
+            <Link to="/variations/new/$jobId" params={{ jobId: job.id }} search={{ elevation: el.name }} className="w-full h-14 rounded-full bg-white border border-line text-[16px] font-extrabold flex items-center justify-center gap-2">
               <AlertTriangle className="w-5 h-5" strokeWidth={2.5} /> Raise Variation
             </Link>
           </>
@@ -193,16 +193,16 @@ function JobCard() {
         {tab === "photos" && (
           <>
             {job.status === "complete" && (
-              <Link to="/certificate/$jobId" params={{ jobId: job.id }} className="w-full h-16 rounded-full bg-go text-white border-2 border-ink text-[16px] font-extrabold flex items-center justify-center gap-2 hard">
+              <Link to="/certificate/$jobId" params={{ jobId: job.id }} className="w-full h-16 rounded-full bg-go text-white border border-line text-[16px] font-extrabold flex items-center justify-center gap-2 hard">
                 <FileCheck2 className="w-5 h-5" /> Warranty Certificate
               </Link>
             )}
             {job.elevations.map((e) => (
-              <section key={e.name} className="bg-white border-2 border-ink rounded-[18px] p-4 hard">
+              <section key={e.name} className="bg-white border border-line rounded-[18px] p-4 hard">
                 <div className="flex justify-between items-baseline"><h2 className="font-display text-[18px]">{e.name}</h2><span className="text-[13px] font-extrabold">{e.stages.filter((s) => s.status === "verified").length}/6 verified</span></div>
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   {e.stages.map((s) => (
-                    <div key={s.code} className="aspect-square rounded-[8px] border-2 border-ink overflow-hidden relative bg-stone">
+                    <div key={s.code} className="aspect-square rounded-[8px] border border-line overflow-hidden relative bg-stone">
                       {s.photo ? <img src={s.photo} alt={stageDef(s.code).name} className="w-full h-full object-cover" /> : <div className="w-full h-full grid place-items-center text-ink/40">{s.status === "locked" ? <Lock className="w-5 h-5" /> : <Camera className="w-5 h-5" />}</div>}
                       <span className="absolute left-1 bottom-1 bg-ink text-white rounded-full px-1.5 text-[10px] font-extrabold">{s.code}</span>
                     </div>
@@ -215,7 +215,7 @@ function JobCard() {
 
         {tab === "crew" && (
           <>
-            <section className="bg-white border-2 border-ink rounded-[18px] p-4 hard">
+            <section className="bg-white border border-line rounded-[18px] p-4 hard">
               <p className="text-[13px] font-extrabold uppercase tracking-widest">Gang</p>
               <h2 className="font-display text-[20px]">{crew?.name ?? "Not assigned"}</h2>
               <div className="mt-4 flex items-center justify-between">
@@ -223,12 +223,12 @@ function JobCard() {
                 <Stepper value={job.menOnSite} onChange={(v) => update((j) => { j.menOnSite = Math.max(0, v); })} />
               </div>
             </section>
-            <section className="bg-white border-2 border-ink rounded-[18px] p-4 hard">
+            <section className="bg-white border border-line rounded-[18px] p-4 hard">
               <RunwayGauge r={runway} compact />
             </section>
             <button
               onClick={() => { update((j) => { j.daysWorked += 1; j.scaffold.daysUsed += 1; }); toast.success(`Day logged — ${(runway.remaining - 1).toFixed(1)} crew-days left on budget`); }}
-              className="w-full h-16 rounded-full bg-safety border-2 border-ink text-[17px] font-extrabold hard">
+              className="w-full h-16 rounded-full bg-safety border border-line text-[17px] font-extrabold hard">
               Close Out Today's Shift
             </button>
             <p className="text-[13px] font-bold text-ink/70 text-center">Logs one crew-day and one scaffold day for {job.address}.</p>
@@ -237,22 +237,22 @@ function JobCard() {
 
         {tab === "stock" && (
           <>
-            <section className="bg-white border-2 border-ink rounded-[18px] p-4 hard">
+            <section className="bg-white border border-line rounded-[18px] p-4 hard">
               <div className="flex items-center justify-between">
                 <div><p className="font-display text-[30px] leading-none">{job.bags}</p><p className="text-[14px] font-extrabold uppercase">Bags applied</p></div>
                 <Stepper value={job.bags} onChange={(v) => update((j) => { j.bags = Math.max(0, v); })} />
               </div>
             </section>
-            <section className="bg-white border-2 border-ink rounded-[18px] p-4 hard">
+            <section className="bg-white border border-line rounded-[18px] p-4 hard">
               <p className="text-[13px] font-extrabold uppercase tracking-widest">Topcoat batch log</p>
               <p className="text-[13px] font-bold text-ink/70">One-run finish: log every batch so the colour can be matched later.</p>
               <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); const b = batch.trim(); if (!b) return; update((j) => { j.batches.push(b); }); setBatch(""); toast.success(`Batch ${b} logged`); }}>
-                <input value={batch} onChange={(e) => setBatch(e.target.value)} placeholder="e.g. SIL-2291-C" className="flex-1 min-w-0 h-12 px-4 rounded-full border-2 border-ink font-semibold outline-none" />
-                <button className="h-12 px-5 rounded-full bg-safety border-2 border-ink font-extrabold">Log</button>
+                <input value={batch} onChange={(e) => setBatch(e.target.value)} placeholder="e.g. SIL-2291-C" className="flex-1 min-w-0 h-12 px-4 rounded-full border border-line font-semibold outline-none" />
+                <button className="h-12 px-5 rounded-full bg-safety border border-line font-extrabold">Log</button>
               </form>
               <ul className="mt-3 space-y-2">
                 {job.batches.length === 0 && <li className="text-[14px] font-bold text-ink/60">No batches logged yet.</li>}
-                {job.batches.map((b, i) => <li key={i} className="h-12 px-4 rounded-[10px] border-2 border-ink flex items-center font-extrabold">{b}</li>)}
+                {job.batches.map((b, i) => <li key={i} className="h-12 px-4 rounded-[10px] border border-line flex items-center font-extrabold">{b}</li>)}
               </ul>
             </section>
           </>
@@ -263,11 +263,11 @@ function JobCard() {
         <div className="fixed bottom-[88px] inset-x-0 z-20 pointer-events-none">
           <div className="mx-auto max-w-[430px] px-4 pointer-events-auto">
             {cur ? (
-              <button onClick={() => pick(cur.code)} disabled={busy} className="w-full h-16 rounded-full bg-ink text-white border-2 border-ink text-[17px] font-extrabold flex items-center justify-center gap-2">
+              <button onClick={() => pick(cur.code)} disabled={busy} className="w-full h-16 rounded-full bg-ink text-white border border-line text-[17px] font-extrabold flex items-center justify-center gap-2">
                 <Plus className="w-5 h-5" strokeWidth={3} /> {busy ? "Uploading…" : "Add Elevation Photo"}
               </button>
             ) : job.status === "complete" ? (
-              <Link to="/certificate/$jobId" params={{ jobId: job.id }} className="w-full h-16 rounded-full bg-go text-white border-2 border-ink text-[17px] font-extrabold flex items-center justify-center gap-2">
+              <Link to="/certificate/$jobId" params={{ jobId: job.id }} className="w-full h-16 rounded-full bg-go text-white border border-line text-[17px] font-extrabold flex items-center justify-center gap-2">
                 <FileCheck2 className="w-5 h-5" /> View Warranty Certificate
               </Link>
             ) : null}
@@ -282,9 +282,9 @@ function JobCard() {
 function Stepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
     <div className="flex items-center gap-2">
-      <button aria-label="Decrease" onClick={() => onChange(value - 1)} className="w-12 h-12 rounded-full border-2 border-ink grid place-items-center"><Minus className="w-5 h-5" strokeWidth={3} /></button>
+      <button aria-label="Decrease" onClick={() => onChange(value - 1)} className="w-12 h-12 rounded-full border border-line grid place-items-center"><Minus className="w-5 h-5" strokeWidth={3} /></button>
       <span className="font-display text-[20px] w-10 text-center">{value}</span>
-      <button aria-label="Increase" onClick={() => onChange(value + 1)} className="w-12 h-12 rounded-full bg-ink text-white border-2 border-ink grid place-items-center"><Plus className="w-5 h-5" strokeWidth={3} /></button>
+      <button aria-label="Increase" onClick={() => onChange(value + 1)} className="w-12 h-12 rounded-full bg-ink text-white border border-line grid place-items-center"><Plus className="w-5 h-5" strokeWidth={3} /></button>
     </div>
   );
 }

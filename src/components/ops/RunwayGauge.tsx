@@ -12,7 +12,7 @@ export function RunwayGauge({ r, compact }: { r: ReturnType<typeof labourRunway>
           {r.over ? `${Math.abs(r.remaining).toFixed(1)} days over` : `${r.remaining.toFixed(1)} crew-days left`}
         </span>
       </div>
-      <div className="mt-3 h-6 rounded-full border-2 border-ink bg-white overflow-hidden">
+      <div className="mt-3 h-6 rounded-full border border-line bg-white overflow-hidden">
         <div className={cn("h-full", r.over ? "bg-safety" : pct > 80 ? "bg-ink" : "bg-go")} style={{ width: `${pct}%` }} />
       </div>
       <p className="mt-2 text-[13px] font-bold">

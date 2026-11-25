@@ -6,7 +6,7 @@ import { useOps } from "@/lib/ops/store";
 import { buildJob } from "@/lib/ops/intake";
 import type { Region } from "@/lib/ops/types";
 
-export const fieldCls = "w-full h-12 px-4 rounded-[10px] bg-white border-2 border-ink text-[15px] font-semibold outline-none focus:ring-2 focus:ring-safety";
+export const fieldCls = "w-full h-12 px-4 rounded-[10px] bg-white border border-line text-[15px] font-semibold outline-none focus:ring-2 focus:ring-safety";
 export const labelCls = "block text-[12px] font-extrabold uppercase tracking-widest mb-1.5";
 
 export function NewJobDialog({ children }: { children: ReactNode }) {
@@ -36,7 +36,7 @@ export function NewJobDialog({ children }: { children: ReactNode }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="border-2 border-ink rounded-[18px] hard max-w-lg bg-white">
+      <DialogContent className="border border-line rounded-[18px] hard max-w-lg bg-white">
         <DialogHeader><DialogTitle className="font-display text-[22px]">New Job</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div className="grid grid-cols-3 gap-3">
@@ -60,7 +60,7 @@ export function NewJobDialog({ children }: { children: ReactNode }) {
               <label key={k}><span className={labelCls}>{k} m²</span><input className={fieldCls} inputMode="numeric" value={f[k]} onChange={set(k)} /></label>
             ))}
           </div>
-          <button className="w-full h-14 rounded-full bg-safety border-2 border-ink text-[16px] font-extrabold hard">Create & Schedule</button>
+          <button className="w-full h-14 rounded-full bg-safety border border-line text-[16px] font-extrabold hard">Create & Schedule</button>
         </form>
       </DialogContent>
     </Dialog>

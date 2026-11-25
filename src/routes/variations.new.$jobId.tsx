@@ -18,7 +18,7 @@ export const Route = createFileRoute("/variations/new/$jobId")({
   component: NewVariation,
 });
 
-const field = "w-full h-12 px-4 rounded-[10px] bg-white border-2 border-ink text-[16px] font-semibold outline-none focus:ring-2 focus:ring-safety";
+const field = "w-full h-12 px-4 rounded-[10px] bg-white border border-line text-[16px] font-semibold outline-none focus:ring-2 focus:ring-safety";
 const lab = "block text-[12px] font-extrabold uppercase tracking-widest mb-1.5";
 
 function NewVariation() {
@@ -33,7 +33,7 @@ function NewVariation() {
   const [busy, setBusy] = useState(false);
 
   if (!job)
-    return <MobileFrame><MobileHeader title="Job not found" region={tenant.homeRegion} /><div className="px-4"><Link to="/site" className="h-14 rounded-full bg-white border-2 border-ink font-extrabold grid place-items-center">Back</Link></div></MobileFrame>;
+    return <MobileFrame><MobileHeader title="Job not found" region={tenant.homeRegion} /><div className="px-4"><Link to="/site" className="h-14 rounded-full bg-white border border-line font-extrabold grid place-items-center">Back</Link></div></MobileFrame>;
 
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
 
@@ -76,7 +76,7 @@ function NewVariation() {
     <MobileFrame>
       <MobileHeader title="Raise Variation" region={job.region} />
       <form onSubmit={save} className="px-4 pb-32 space-y-4">
-        <section className="bg-white border-2 border-ink rounded-[18px] p-4 hard space-y-3">
+        <section className="bg-white border border-line rounded-[18px] p-4 hard space-y-3">
           <label className="block"><span className={lab}>Elevation</span>
             <select className={field} value={f.elevation} onChange={set("elevation")}>{job.elevations.map((e) => <option key={e.name}>{e.name}</option>)}</select></label>
           <label className="block"><span className={lab}>Short name</span><input className={field} value={f.headline} onChange={set("headline")} placeholder="Blown Brickwork" maxLength={40} /></label>
@@ -84,18 +84,18 @@ function NewVariation() {
           <label className="block"><span className={lab}>Where</span><textarea className={field + " h-24 py-3"} value={f.description} onChange={set("description")} placeholder="Lower left bay, beside the kitchen window." maxLength={300} /></label>
         </section>
 
-        <section className="bg-white border-2 border-ink rounded-[18px] p-4 hard">
+        <section className="bg-white border border-line rounded-[18px] p-4 hard">
           <p className={lab}>Defect photos</p>
           <div className="grid grid-cols-2 gap-3">
             {photos.map((p, i) => (
-              <div key={i} className="relative aspect-[4/5] rounded-[12px] border-2 border-ink overflow-hidden">
+              <div key={i} className="relative aspect-[4/5] rounded-[12px] border border-line overflow-hidden">
                 <img src={p.src} alt="" className="w-full h-full object-cover" />
-                <button type="button" aria-label="Remove photo" onClick={() => setPhotos(photos.filter((_, j) => j !== i))} className="absolute right-2 top-2 w-9 h-9 rounded-full bg-white border-2 border-ink grid place-items-center"><X className="w-4 h-4" strokeWidth={3} /></button>
+                <button type="button" aria-label="Remove photo" onClick={() => setPhotos(photos.filter((_, j) => j !== i))} className="absolute right-2 top-2 w-9 h-9 rounded-full bg-white border border-line grid place-items-center"><X className="w-4 h-4" strokeWidth={3} /></button>
                 <span className="absolute left-2 bottom-2 bg-ink text-white rounded-full px-2.5 py-1 text-[12px] font-extrabold">{p.at}</span>
               </div>
             ))}
             {photos.length < 4 && (
-              <label className="aspect-[4/5] rounded-[12px] border-2 border-dashed border-ink grid place-items-center cursor-pointer text-center">
+              <label className="aspect-[4/5] rounded-[12px] border border-dashed border-line grid place-items-center cursor-pointer text-center">
                 <span><Camera className="w-7 h-7 mx-auto" strokeWidth={2.5} /><span className="block mt-2 text-[13px] font-extrabold">{busy ? "Adding…" : "Add photo"}</span></span>
                 <input type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={addPhotos} />
               </label>
@@ -103,7 +103,7 @@ function NewVariation() {
           </div>
         </section>
 
-        <section className="bg-white border-2 border-ink rounded-[18px] p-4 hard">
+        <section className="bg-white border border-line rounded-[18px] p-4 hard">
           <p className={lab}>Scope &amp; materials</p>
           <div className="space-y-2">
             {items.map((it, i) => (
@@ -113,10 +113,10 @@ function NewVariation() {
               </div>
             ))}
           </div>
-          <button type="button" onClick={() => setItems([...items, { name: "", qty: "" }])} className="mt-3 h-11 px-4 rounded-full border-2 border-ink text-[14px] font-extrabold inline-flex items-center gap-1"><Plus className="w-4 h-4" strokeWidth={3} /> Add line</button>
+          <button type="button" onClick={() => setItems([...items, { name: "", qty: "" }])} className="mt-3 h-11 px-4 rounded-full border border-line text-[14px] font-extrabold inline-flex items-center gap-1"><Plus className="w-4 h-4" strokeWidth={3} /> Add line</button>
         </section>
 
-        <section className="bg-white border-2 border-ink rounded-[18px] p-4 hard grid grid-cols-3 gap-3">
+        <section className="bg-white border border-line rounded-[18px] p-4 hard grid grid-cols-3 gap-3">
           <label className="col-span-3"><span className={lab}>Price £ (ex VAT)</span><input className={field} inputMode="decimal" value={f.cost} onChange={set("cost")} placeholder="240" /></label>
           <label><span className={lab}>Site days</span><input className={field} inputMode="decimal" value={f.siteDays} onChange={set("siteDays")} /></label>
           <label><span className={lab}>Scaffold +d</span><input className={field} inputMode="numeric" value={f.scaffoldDays} onChange={set("scaffoldDays")} /></label>
@@ -125,7 +125,7 @@ function NewVariation() {
 
         <div className="fixed bottom-0 inset-x-0 z-20">
           <div className="mx-auto max-w-[430px] px-4 pb-4 pt-2 bg-gradient-to-t from-stone via-stone to-transparent">
-            <button className="w-full h-16 rounded-full bg-safety border-2 border-ink text-[17px] font-extrabold hard">Continue to Signature</button>
+            <button className="w-full h-16 rounded-full bg-safety border border-line text-[17px] font-extrabold hard">Continue to Signature</button>
           </div>
         </div>
       </form>

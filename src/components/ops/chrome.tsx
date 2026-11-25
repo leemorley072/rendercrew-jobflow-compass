@@ -47,7 +47,7 @@ export function WeatherPill({ region, mobile }: { region: Region; mobile?: boole
   const cond = w.rain > 30 ? "Rain" : "Dry";
   if (mobile)
     return (
-      <div className="flex items-center gap-2 bg-white border-2 border-ink rounded-full pl-3 pr-1 h-11 shrink-0">
+      <div className="flex items-center gap-2 bg-white border border-line rounded-full pl-3 pr-1 h-11 shrink-0">
         <span className={cn("w-3 h-3 rounded-full", safe ? "bg-go" : "bg-safety")} />
         <span className="text-[13px] font-extrabold leading-tight w-9">{w.temp}°C {cond}</span>
         <span className={cn("text-[11px] font-extrabold rounded-full px-2.5 py-1 leading-tight w-[76px]", safe ? "bg-go text-white" : "bg-safety text-ink")}>
@@ -56,7 +56,7 @@ export function WeatherPill({ region, mobile }: { region: Region; mobile?: boole
       </div>
     );
   return (
-    <div className="flex items-center gap-2 bg-stone border-2 border-ink rounded-full px-3 h-11">
+    <div className="flex items-center gap-2 bg-stone border border-line rounded-full px-3 h-11">
       <span className={cn("w-3 h-3 rounded-full", safe ? "bg-go" : "bg-safety")} />
       <span className="text-[13px] font-extrabold">{w.temp}°C {cond}</span>
       <span className={cn("text-[11px] font-extrabold rounded-full px-2 py-0.5", safe ? "bg-go text-white" : "bg-safety text-ink")}>
@@ -70,9 +70,9 @@ export function DesktopHeader({ title, subtitle }: { title: string; subtitle: st
   const { tenant, state } = useOps();
   const initials = tenant.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
   return (
-    <header className="h-16 px-6 flex items-center justify-between gap-6 bg-white border-b-2 border-ink">
+    <header className="h-16 px-6 flex items-center justify-between gap-6 bg-white border-b-2 border-line">
       <div className="flex items-center gap-5 min-w-0">
-        <Link to="/" className="text-[12px] font-extrabold tracking-[0.18em] uppercase shrink-0">RenderFuel</Link>
+        <Link to="/" className="text-[16px] font-extrabold italic tracking-tight uppercase shrink-0">Render<span className="text-safety">Fuel</span></Link>
         <span className="w-0.5 h-8 bg-ink shrink-0" />
         <div className="min-w-0">
           <h1 className="font-display text-[22px] leading-6 truncate">{title}</h1>
@@ -83,16 +83,16 @@ export function DesktopHeader({ title, subtitle }: { title: string; subtitle: st
         <WeatherPill region={tenant.homeRegion} />
         {state.role !== "agency" && (
           <NewJobDialog>
-            <button className="h-11 px-4 rounded-full bg-safety border-2 border-ink text-[14px] font-extrabold hard">+ New Job</button>
+            <button className="h-11 px-4 rounded-full bg-safety border border-line text-[14px] font-extrabold hard">+ New Job</button>
           </NewJobDialog>
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button aria-label="Switch role" className="w-11 h-11 rounded-full bg-white border-2 border-ink grid place-items-center font-display text-[14px]">
+            <button aria-label="Switch role" className="w-11 h-11 rounded-full bg-white border border-line grid place-items-center font-display text-[14px]">
               {initials}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="border-2 border-ink rounded-[12px] w-56">
+          <DropdownMenuContent align="end" className="border border-line rounded-[12px] w-56">
             <DropdownMenuLabel className="text-[13px]">{tenant.name}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <RoleItems />
@@ -112,13 +112,13 @@ const TABS = [
 
 export function DesktopTabs() {
   return (
-    <nav className="h-14 px-6 flex items-center gap-2 bg-stone border-b-2 border-ink">
+    <nav className="h-14 px-6 flex items-center gap-2 bg-stone border-b-2 border-line">
       {TABS.map((t) => (
         <Link
           key={t.to}
           to={t.to}
           activeOptions={{ exact: t.to === "/" }}
-          className="h-11 px-5 rounded-full grid place-items-center text-[14px] font-extrabold border-2 border-transparent hover:border-ink data-[status=active]:bg-ink data-[status=active]:text-white data-[status=active]:border-ink"
+          className="h-11 px-5 rounded-full grid place-items-center text-[14px] font-extrabold border border-transparent hover:border-line data-[status=active]:bg-ink data-[status=active]:text-white data-[status=active]:border-line"
         >
           {t.label}
         </Link>
@@ -140,10 +140,10 @@ export function DesktopShell({ title, subtitle, children }: { title: string; sub
 export function MobileBrand() {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="text-[11px] font-extrabold tracking-[0.18em] uppercase flex items-center gap-1" aria-label="Switch role">
+      <DropdownMenuTrigger className="text-[14px] font-extrabold italic tracking-tight uppercase flex items-center gap-1" aria-label="Switch role">
         RenderFuel <ChevronDown className="w-3 h-3" strokeWidth={3} />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="border-2 border-ink rounded-[12px] w-52">
+      <DropdownMenuContent align="start" className="border border-line rounded-[12px] w-52">
         <RoleItems />
       </DropdownMenuContent>
     </DropdownMenu>
@@ -174,7 +174,7 @@ export function MobileTabs({ jobId, tab }: { jobId: string; tab: MobileTab }) {
   return (
     <div className="fixed bottom-0 inset-x-0 z-30 pointer-events-none">
       <div className="mx-auto max-w-[430px] px-4 pb-4 pointer-events-auto">
-        <nav className="bg-white border-2 border-ink rounded-full p-1.5 grid grid-cols-4 h-16 hard">
+        <nav className="bg-white border border-line rounded-full p-1.5 grid grid-cols-4 h-16 hard">
           {items.map((i) => (
             <Link
               key={i.t}
@@ -202,5 +202,5 @@ export function SectionTitle({ children, meta }: { children: ReactNode; meta?: R
 }
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <section className={cn("bg-white border-2 border-ink rounded-[18px] hard", className)}>{children}</section>;
+  return <section className={cn("bg-white border border-line rounded-[18px] hard", className)}>{children}</section>;
 }
