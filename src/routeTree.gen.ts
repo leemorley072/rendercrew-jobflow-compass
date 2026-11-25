@@ -10,33 +10,154 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as DispatchRouteImport } from './routes/dispatch'
+import { Route as GhlRouteImport } from './routes/ghl'
+import { Route as CertificateJobIdRouteImport } from './routes/certificate.$jobId'
+import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
+import { Route as SiteIndexRouteImport } from './routes/site.index'
+import { Route as SiteJobIdRouteImport } from './routes/site.$jobId'
+import { Route as VariationsVariationIdRouteImport } from './routes/variations.$variationId'
+import { Route as VariationsNewJobIdRouteImport } from './routes/variations.new.$jobId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DispatchRoute = DispatchRouteImport.update({
+  id: '/dispatch',
+  path: '/dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GhlRoute = GhlRouteImport.update({
+  id: '/ghl',
+  path: '/ghl',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CertificateJobIdRoute = CertificateJobIdRouteImport.update({
+  id: '/certificate/$jobId',
+  path: '/certificate/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsJobIdRoute = JobsJobIdRouteImport.update({
+  id: '/jobs/$jobId',
+  path: '/jobs/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteIndexRoute = SiteIndexRouteImport.update({
+  id: '/site/',
+  path: '/site/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteJobIdRoute = SiteJobIdRouteImport.update({
+  id: '/site/$jobId',
+  path: '/site/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VariationsVariationIdRoute = VariationsVariationIdRouteImport.update({
+  id: '/variations/$variationId',
+  path: '/variations/$variationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VariationsNewJobIdRoute = VariationsNewJobIdRouteImport.update({
+  id: '/variations/new/$jobId',
+  path: '/variations/new/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/dispatch': typeof DispatchRoute
+  '/ghl': typeof GhlRoute
+  '/certificate/$jobId': typeof CertificateJobIdRoute
+  '/jobs/$jobId': typeof JobsJobIdRoute
+  '/site/$jobId': typeof SiteJobIdRoute
+  '/variations/$variationId': typeof VariationsVariationIdRoute
+  '/site/': typeof SiteIndexRoute
+  '/variations/new/$jobId': typeof VariationsNewJobIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/dispatch': typeof DispatchRoute
+  '/ghl': typeof GhlRoute
+  '/certificate/$jobId': typeof CertificateJobIdRoute
+  '/jobs/$jobId': typeof JobsJobIdRoute
+  '/site/$jobId': typeof SiteJobIdRoute
+  '/variations/$variationId': typeof VariationsVariationIdRoute
+  '/site': typeof SiteIndexRoute
+  '/variations/new/$jobId': typeof VariationsNewJobIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/dispatch': typeof DispatchRoute
+  '/ghl': typeof GhlRoute
+  '/certificate/$jobId': typeof CertificateJobIdRoute
+  '/jobs/$jobId': typeof JobsJobIdRoute
+  '/site/$jobId': typeof SiteJobIdRoute
+  '/variations/$variationId': typeof VariationsVariationIdRoute
+  '/site/': typeof SiteIndexRoute
+  '/variations/new/$jobId': typeof VariationsNewJobIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/dispatch'
+    | '/ghl'
+    | '/certificate/$jobId'
+    | '/jobs/$jobId'
+    | '/site/$jobId'
+    | '/variations/$variationId'
+    | '/site/'
+    | '/variations/new/$jobId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin'
+    | '/dispatch'
+    | '/ghl'
+    | '/certificate/$jobId'
+    | '/jobs/$jobId'
+    | '/site/$jobId'
+    | '/variations/$variationId'
+    | '/site'
+    | '/variations/new/$jobId'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/dispatch'
+    | '/ghl'
+    | '/certificate/$jobId'
+    | '/jobs/$jobId'
+    | '/site/$jobId'
+    | '/variations/$variationId'
+    | '/site/'
+    | '/variations/new/$jobId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  DispatchRoute: typeof DispatchRoute
+  GhlRoute: typeof GhlRoute
+  CertificateJobIdRoute: typeof CertificateJobIdRoute
+  JobsJobIdRoute: typeof JobsJobIdRoute
+  SiteJobIdRoute: typeof SiteJobIdRoute
+  VariationsVariationIdRoute: typeof VariationsVariationIdRoute
+  SiteIndexRoute: typeof SiteIndexRoute
+  VariationsNewJobIdRoute: typeof VariationsNewJobIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +169,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dispatch': {
+      id: '/dispatch'
+      path: '/dispatch'
+      fullPath: '/dispatch'
+      preLoaderRoute: typeof DispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ghl': {
+      id: '/ghl'
+      path: '/ghl'
+      fullPath: '/ghl'
+      preLoaderRoute: typeof GhlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/certificate/$jobId': {
+      id: '/certificate/$jobId'
+      path: '/certificate/$jobId'
+      fullPath: '/certificate/$jobId'
+      preLoaderRoute: typeof CertificateJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/$jobId': {
+      id: '/jobs/$jobId'
+      path: '/jobs/$jobId'
+      fullPath: '/jobs/$jobId'
+      preLoaderRoute: typeof JobsJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/site/': {
+      id: '/site/'
+      path: '/site'
+      fullPath: '/site/'
+      preLoaderRoute: typeof SiteIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/site/$jobId': {
+      id: '/site/$jobId'
+      path: '/site/$jobId'
+      fullPath: '/site/$jobId'
+      preLoaderRoute: typeof SiteJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/variations/$variationId': {
+      id: '/variations/$variationId'
+      path: '/variations/$variationId'
+      fullPath: '/variations/$variationId'
+      preLoaderRoute: typeof VariationsVariationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/variations/new/$jobId': {
+      id: '/variations/new/$jobId'
+      path: '/variations/new/$jobId'
+      fullPath: '/variations/new/$jobId'
+      preLoaderRoute: typeof VariationsNewJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  DispatchRoute: DispatchRoute,
+  GhlRoute: GhlRoute,
+  CertificateJobIdRoute: CertificateJobIdRoute,
+  JobsJobIdRoute: JobsJobIdRoute,
+  SiteJobIdRoute: SiteJobIdRoute,
+  VariationsVariationIdRoute: VariationsVariationIdRoute,
+  SiteIndexRoute: SiteIndexRoute,
+  VariationsNewJobIdRoute: VariationsNewJobIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

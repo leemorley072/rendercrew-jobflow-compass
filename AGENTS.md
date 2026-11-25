@@ -28,3 +28,7 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- App data lives in a client store (`src/lib/ops/store.tsx`, persisted to localStorage, keyed per contractor tenant) — no backend yet; move to Lovable Cloud before going multi-device.
+- Business rules (runway, rain pivot, crew ranking, stage gates, GHL payload checks) are pure functions in `src/lib/ops/*` with tests in `engine.test.ts`; pages only call them.
